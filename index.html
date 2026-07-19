@@ -92,6 +92,7 @@
             transform: scale(0.95);
         }
 
+        /* BACK BUTTON FIX: Added high z-index and proper positioning */
         .back-btn {
             position: absolute;
             top: 20px;
@@ -100,6 +101,7 @@
             font-size: 1rem;
             background: #444;
             box-shadow: none;
+            z-index: 999; /* Fix for button not tapping */
         }
 
         /* Common Score Board */
@@ -113,24 +115,68 @@
             z-index: 10;
         }
 
-        /* Game 1: Collect Mechanics */
-        #game1Area {
+        /* Game 1: Whack-a-Ghewari Mechanics */
+        .game1-container {
+            margin-top: 100px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 90vw;
+            max-width: 400px;
+        }
+
+        .hole {
+            background: #1a1a2e;
+            border-radius: 50%;
+            aspect-ratio: 1/1;
             position: relative;
+            overflow: hidden;
+            border: 4px solid #0f0f1a;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.8);
+        }
+
+        .item {
             width: 100%;
             height: 100%;
-            overflow: hidden;
-        }
-
-        .falling-ghewari {
             position: absolute;
-            width: clamp(40px, 10vmin, 80px);
-            cursor: pointer;
-            animation: fall linear forwards;
+            top: 100%; /* Hidden below */
+            left: 0;
+            transition: top 0.2s ease-out;
+            cursor: crosshair; /* Hammer style cursor for PC */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        @keyframes fall {
-            from { top: -100px; transform: rotate(0deg); }
-            to { top: 110vh; transform: rotate(360deg); }
+        .item.up {
+            top: 0; /* Pop up */
+        }
+
+        .item img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+            pointer-events: none; /* Let the container handle the click */
+        }
+
+        .item.bomb {
+            font-size: clamp(3rem, 15vw, 5rem);
+            background: transparent;
+        }
+
+        /* Game 1 Game Over Alert */
+        #gameOver1 {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 1000;
+            border: 2px solid red;
         }
 
         /* Game 2: Flappy Canvas */
@@ -141,6 +187,7 @@
             max-width: 100%;
             max-height: 80vh;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            margin-top: 80px;
         }
     </style>
 </head>
@@ -156,16 +203,33 @@
         <img src="ghewari.png" id="mainGhewari" alt="Main Ghewari">
         
         <div class="btn-container">
-            <button onclick="startGame1()">Play Collect Ghewari</button>
+            <button onclick="startGame1()">Hit The Ghewari</button>
             <button onclick="startGame2()">Play Flappy Ghewari</button>
         </div>
     </div>
 
-    <!-- ================= GAME 1: COLLECT GHEWARI ================= -->
+    <!-- ================= GAME 1: HIT THE GHEWARI ================= -->
     <div id="game1Screen" class="screen">
         <button class="back-btn" onclick="showHome()">⬅ Back</button>
         <div class="score-board" id="score1">0</div>
-        <div id="game1Area"></div>
+        
+        <div class="game1-container">
+            <div class="hole" id="hole-0"></div>
+            <div class="hole" id="hole-1"></div>
+            <div class="hole" id="hole-2"></div>
+            <div class="hole" id="hole-3"></div>
+            <div class="hole" id="hole-4"></div>
+            <div class="hole" id="hole-5"></div>
+            <div class="hole" id="hole-6"></div>
+            <div class="hole" id="hole-7"></div>
+            <div class="hole" id="hole-8"></div>
+        </div>
+
+        <!-- Game Over Popup -->
+        <div id="gameOver1">
+            <h2 style="color: red; margin-bottom: 20px; font-size: 2rem;">BOMB HIT! 💥</h2>
+            <button onclick="startGame1()">Restart</button>
+        </div>
     </div>
 
     <!-- ================= GAME 2: FLAPPY GHEWARI ================= -->
@@ -192,7 +256,7 @@
             mainSound.currentTime = 0;
             mainSound.play().catch(e => console.log("Audio play error", e));
             
-            // Chota sa bounce effect
+            // Bounce effect
             mainGhewari.style.transform = "scale(0.8)";
             setTimeout(() => { mainGhewari.style.transform = "scale(1)"; }, 150);
         });
@@ -205,57 +269,107 @@
             stopGame2();
         }
 
-        // --- GAME 1: COLLECT GHEWARI LOGIC ---
+        // --- GAME 1: HIT THE GHEWARI (Whack-a-Mole) LOGIC ---
         let score1 = 0;
-        let game1Interval;
-        const game1Area = document.getElementById('game1Area');
+        let lastHole;
+        let game1Timeout;
+        let isGame1Playing = false;
+        const holes = document.querySelectorAll('.hole');
         const score1Display = document.getElementById('score1');
+        const gameOver1Popup = document.getElementById('gameOver1');
 
         function startGame1() {
             homeScreen.classList.remove('active');
             game1Screen.classList.add('active');
+            gameOver1Popup.style.display = 'none';
             score1 = 0;
             score1Display.innerText = score1;
-            game1Area.innerHTML = ''; // Clear old items
+            isGame1Playing = true;
             
-            // Har 800ms me ek naya ghewari girega
-            game1Interval = setInterval(spawnGhewari, 800);
+            // Clear all holes
+            holes.forEach(hole => hole.innerHTML = '');
+            
+            popItem(); // Start popping
         }
 
         function stopGame1() {
-            clearInterval(game1Interval);
-            game1Area.innerHTML = '';
+            isGame1Playing = false;
+            clearTimeout(game1Timeout);
+            holes.forEach(hole => hole.innerHTML = '');
+            gameOver1Popup.style.display = 'none';
         }
 
-        function spawnGhewari() {
-            const img = document.createElement('img');
-            img.src = 'ghewari.png';
-            img.className = 'falling-ghewari';
-            
-            // Random horizontal position
-            img.style.left = Math.random() * 80 + 10 + 'vw'; 
-            
-            // Random speed (girene ki speed)
-            const duration = Math.random() * 2 + 2; 
-            img.style.animationDuration = duration + 's';
+        function randomTime(min, max) {
+            return Math.round(Math.random() * (max - min) + min);
+        }
 
-            img.addEventListener('touchstart', collectItem);
-            img.addEventListener('mousedown', collectItem);
+        function randomHole(holes) {
+            const idx = Math.floor(Math.random() * holes.length);
+            const hole = holes[idx];
+            if (hole === lastHole) {
+                return randomHole(holes);
+            }
+            lastHole = hole;
+            return hole;
+        }
 
-            function collectItem(e) {
-                e.preventDefault();
-                score1++;
-                score1Display.innerText = score1;
-                img.remove(); // Collect hone par image gayab
-                playBeep(); // Game ke andar chota beep
+        function popItem() {
+            if (!isGame1Playing) return;
+
+            const time = randomTime(600, 1000); // Items stay up for 0.6 to 1 second
+            const hole = randomHole(holes);
+            
+            // 20% Chance of getting a Bomb
+            const isBomb = Math.random() < 0.2; 
+            
+            hole.innerHTML = ''; // Clear previous
+            
+            const el = document.createElement('div');
+            el.classList.add('item');
+            
+            if (isBomb) {
+                el.classList.add('bomb');
+                el.innerText = '💣';
+                el.dataset.type = 'bomb';
+            } else {
+                const img = document.createElement('img');
+                img.src = 'ghewari.png';
+                el.appendChild(img);
+                el.dataset.type = 'ghewari';
             }
 
-            game1Area.appendChild(img);
+            el.addEventListener('mousedown', whackItem);
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); whackItem.call(el, e); });
 
-            // Screen ke bahar jane par delete kar do (Memory bachane ke liye)
+            hole.appendChild(el);
+            
+            // CSS transition trigger
             setTimeout(() => {
-                if(img.parentElement) img.remove();
-            }, duration * 1000);
+                if (isGame1Playing) el.classList.add('up');
+            }, 10);
+
+            game1Timeout = setTimeout(() => {
+                el.classList.remove('up');
+                if (isGame1Playing) popItem();
+            }, time);
+        }
+
+        function whackItem(e) {
+            if (!isGame1Playing) return;
+
+            if (this.dataset.type === 'bomb') {
+                // Game Over Logic
+                isGame1Playing = false;
+                clearTimeout(game1Timeout);
+                this.style.background = 'red'; // Highlight bomb red
+                gameOver1Popup.style.display = 'block';
+            } else {
+                // Score Logic
+                score1++;
+                score1Display.innerText = score1;
+                this.classList.remove('up'); // Hide immediately
+                playBeep();
+            }
         }
 
         // --- GAME 2: FLAPPY GHEWARI LOGIC ---
@@ -280,10 +394,6 @@
                 if (this.y + this.h >= canvas.height || this.y <= 0) {
                     isGameOver = true;
                 }
-            },
-            flap: function() {
-                this.velocity = this.jump;
-                playBeep();
             }
         };
 
@@ -295,10 +405,8 @@
                     let topY = p.y;
                     let bottomY = p.y + this.gap;
                     
-                    ctx.fillStyle = "#228B22"; // Pipe color
-                    // Top pipe
+                    ctx.fillStyle = "#228B22"; 
                     ctx.fillRect(p.x, 0, this.w, topY);
-                    // Bottom pipe
                     ctx.fillRect(p.x, bottomY, this.w, canvas.height - bottomY);
                 }
             },
@@ -325,7 +433,6 @@
                         score2Display.innerText = score2;
                     }
 
-                    // Remove old pipes
                     if (p.x + this.w <= 0) {
                         this.position.shift();
                     }
@@ -377,7 +484,6 @@
             game2Req = requestAnimationFrame(loop);
         }
 
-        // Flappy Controls
         canvas.addEventListener('mousedown', flapControl);
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); flapControl(); });
 
@@ -386,11 +492,12 @@
                 resetFlappy();
                 loop();
             } else {
-                bird.flap();
+                bird.velocity = bird.jump;
+                playBeep();
             }
         }
 
-        // --- Simple Generated Beep Sound for In-Game (Taaki extra file na lagani pade) ---
+        // --- Simple Generated Beep Sound ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playBeep() {
             if(audioCtx.state === 'suspended') audioCtx.resume();
