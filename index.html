@@ -3,53 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ghewari Universe</title>
+    <title>Ghewari Universe & Table</title>
     <style>
-        /* Base Reset */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; touch-action: manipulation; user-select: none; }
         body { background: radial-gradient(circle at center, #2b2b45, #11111c); color: white; overflow: hidden; width: 100vw; height: 100vh; }
         
-        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow-y: auto; padding-top: 60px;}
         .active { display: flex; }
 
-        /* Branding */
-        h1 { font-size: clamp(1.5rem, 4vw, 2.5rem); color: #00ffcc; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 15px rgba(0, 255, 204, 0.6); position: absolute; top: 20px; text-align: center; width: 100%; z-index: 5; }
+        h1 { font-size: clamp(1.2rem, 3vw, 2rem); color: #00ffcc; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 10px rgba(0, 255, 204, 0.6); margin-bottom: 20px; }
+        .side-brand { display: none; position: absolute; top: 50%; transform: translateY(-50%) rotate(-90deg); color: #00ffcc; font-size: 1.2rem; font-weight: bold; letter-spacing: 4px; text-transform: uppercase; z-index: 100; pointer-events: none; opacity: 0.5; }
+        .left-brand { left: 10px; } .right-brand { right: 10px; }
+
+        #mainGhewari { width: clamp(150px, 40vmin, 300px); cursor: pointer; transition: transform 1s ease-in-out; filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.2)); margin-bottom: 30px; }
+        #mainGhewari.growing { transform: scale(1.4); }
+
+        .btn-container { display: flex; flex-direction: column; gap: 10px; }
+        button { background: linear-gradient(90deg, #ff007f, #ff7f00); border: none; color: white; font-size: 1rem; font-weight: bold; padding: 12px 25px; border-radius: 30px; cursor: pointer; }
         
-        .side-brand { display: none; position: absolute; top: 50%; transform: translateY(-50%) rotate(-90deg); color: #00ffcc; font-size: 1.5rem; font-weight: bold; letter-spacing: 5px; text-transform: uppercase; z-index: 50; pointer-events: none; text-shadow: 0 0 10px #00ffcc; opacity: 0.8; }
-        .left-brand { left: 20px; }
-        .right-brand { right: 20px; }
+        .back-btn { position: absolute; top: 20px; left: 20px; padding: 8px 15px; background: #444; border-radius: 20px; cursor: pointer; z-index: 9999; }
 
-        /* Main Image Animation Logic */
-        #mainGhewari { 
-            width: clamp(200px, 50vmin, 400px); 
-            cursor: pointer; 
-            transition: transform 1s ease-in-out; /* Default transition */
-            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.2)); 
-            margin-bottom: 40px; 
-        }
-        #mainGhewari.growing { 
-            transform: scale(1.4); /* Image badi hogi */
-        }
+        /* Periodic Table Grid */
+        #tableContainer { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; width: 95vw; margin: 20px auto; }
+        .element { background: #333; padding: 5px; border-radius: 4px; text-align: center; font-size: 0.8rem; cursor: pointer; border: 1px solid #555; }
+        .mystery { background: #ffcc00; color: #000; font-weight: bold; border: 2px solid white; }
 
-        .btn-container { display: flex; flex-direction: column; gap: 15px; z-index: 10; }
-        button { background: linear-gradient(90deg, #ff007f, #ff7f00); border: none; color: white; font-size: clamp(1rem, 3vw, 1.5rem); font-weight: bold; padding: 15px 30px; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 0, 127, 0.4); transition: transform 0.2s; text-transform: uppercase; }
-        button:active { transform: scale(0.95); }
-
-        .back-btn { position: absolute; top: 20px; left: 20px; padding: 10px 20px; font-size: 1.2rem; background: #444; color: white; border: none; border-radius: 20px; cursor: pointer; z-index: 9999; }
-
-        .score-board { position: absolute; top: 80px; font-size: clamp(2rem, 6vw, 4rem); font-weight: 900; color: #ffd700; text-shadow: 2px 2px 0px #ff0000; z-index: 10; }
-        
-        /* Game 1 Grid */
-        .game1-container { margin-top: 100px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 90vw; max-width: 400px; }
-        .hole { background: #1a1a2e; border-radius: 50%; aspect-ratio: 1/1; position: relative; overflow: hidden; border: 4px solid #0f0f1a; box-shadow: inset 0 10px 20px rgba(0,0,0,0.8); }
-        .item { width: 100%; height: 100%; position: absolute; top: 100%; left: 0; transition: top 0.2s ease-out; cursor: crosshair; display: flex; align-items: center; justify-content: center; }
+        /* Games styles (kept from previous) */
+        .score-board { font-size: 2rem; color: #ffd700; margin-bottom: 20px; }
+        .game1-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 90vw; max-width: 300px; }
+        .hole { background: #1a1a2e; border-radius: 50%; width: 80px; height: 80px; position: relative; border: 4px solid #0f0f1a; }
+        .item { width: 100%; height: 100%; position: absolute; top: 100%; transition: top 0.2s; cursor: crosshair; }
         .item.up { top: 0; }
-        .item img { width: 80%; height: 80%; object-fit: contain; pointer-events: none; }
-        .item.bomb { font-size: clamp(3rem, 15vw, 5rem); }
-
-        #gameOver1 { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); padding: 40px; border-radius: 20px; text-align: center; z-index: 10000; border: 4px solid red; }
-        
-        canvas { background: #70c5ce; border: 4px solid #fff; border-radius: 10px; max-width: 100%; max-height: 80vh; box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-top: 80px; }
+        canvas { background: #70c5ce; border: 4px solid #fff; border-radius: 10px; }
 
         @media (orientation: landscape) { h1 { display: none; } .side-brand { display: block; } }
     </style>
@@ -57,7 +42,6 @@
 <body>
 
     <audio id="mainSound" src="ghewari.mp3" preload="auto"></audio>
-
     <div class="side-brand left-brand">Made by Zainul</div>
     <div class="side-brand right-brand">Made by Zainul</div>
 
@@ -67,8 +51,16 @@
         <img src="ghewari.png" id="mainGhewari" alt="Main Ghewari">
         <div class="btn-container">
             <button onclick="startGame1()">Hit The Ghewari</button>
-            <button onclick="startGame2()">Play Flappy Ghewari</button>
+            <button onclick="startGame2()">Flappy Ghewari</button>
+            <button onclick="showTable()">Periodic Table</button>
         </div>
+    </div>
+
+    <!-- Table Screen -->
+    <div id="tableScreen" class="screen">
+        <button class="back-btn" onclick="showHome()">⬅ BACK</button>
+        <h2 style="margin-top:20px;">Periodic Table</h2>
+        <div id="tableContainer"></div>
     </div>
 
     <!-- Game 1 -->
@@ -76,52 +68,58 @@
         <button class="back-btn" onclick="showHome()">⬅ BACK</button>
         <div class="score-board" id="score1">0</div>
         <div class="game1-container">
-            <div class="hole" id="hole-0"></div><div class="hole" id="hole-1"></div><div class="hole" id="hole-2"></div>
-            <div class="hole" id="hole-3"></div><div class="hole" id="hole-4"></div><div class="hole" id="hole-5"></div>
-            <div class="hole" id="hole-6"></div><div class="hole" id="hole-7"></div><div class="hole" id="hole-8"></div>
-        </div>
-        <div id="gameOver1">
-            <h2 style="color: red; margin-bottom: 20px; font-size: 2rem;">💥 BOOM! 💥</h2>
-            <button onclick="startGame1()">RETRY</button>
+            <script>for(let i=0; i<9; i++) document.write('<div class="hole" id="hole-'+i+'"></div>');</script>
         </div>
     </div>
 
     <!-- Game 2 -->
     <div id="game2Screen" class="screen">
         <button class="back-btn" onclick="showHome()">⬅ BACK</button>
-        <div class="score-board" id="score2">0</div>
-        <canvas id="flappyCanvas" width="320" height="480"></canvas>
+        <canvas id="flappyCanvas" width="300" height="400"></canvas>
     </div>
 
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // --- Periodic Table Render ---
+        const tableContainer = document.getElementById('tableContainer');
+        for(let i=1; i<=118; i++) {
+            const div = document.createElement('div');
+            div.className = 'element';
+            div.innerText = i;
+            tableContainer.appendChild(div);
+        }
+        // Gurunathium (119)
+        const g119 = document.createElement('div');
+        g119.className = 'element mystery';
+        g119.innerText = '?';
+        g119.onclick = function() {
+            this.innerText = '119 GURUNATHIUM';
+            this.style.background = '#ff007f';
+            playBeep();
+        };
+        tableContainer.appendChild(g119);
 
-        // Audio Logic for Main Screen
+        // --- Core Logic ---
+        function showHome() { 
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('homeScreen').classList.add('active'); 
+        }
+        function showTable() { 
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('tableScreen').classList.add('active');
+        }
+
+        // --- Sound & Animation Logic ---
         const mainSound = document.getElementById('mainSound');
         const mainGhewari = document.getElementById('mainGhewari');
-
         mainGhewari.addEventListener('click', () => {
             if(audioCtx.state === 'suspended') audioCtx.resume();
-            
-            // Audio reset & play
-            mainSound.currentTime = 0;
-            mainSound.play().catch(e => {});
-
-            // Image Growth Logic
+            mainSound.currentTime = 0; mainSound.play().catch(e => {});
             mainGhewari.classList.add('growing');
-            
-            // Set animation speed to match audio duration
-            mainSound.onloadedmetadata = () => {
-                mainGhewari.style.transitionDuration = mainSound.duration + 's';
-            };
-            
-            // When audio ends, shrink back
-            mainSound.onended = () => {
-                mainGhewari.classList.remove('growing');
-            };
+            setTimeout(() => { mainGhewari.classList.remove('growing'); }, 2000);
         });
 
-        // --- Sound Effects ---
         function playBeep() {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -134,78 +132,40 @@
         }
 
         function playExplosion() {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            const bufferSize = audioCtx.sampleRate * 0.8;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.5, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
             const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
-            const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.setValueAtTime(100, audioCtx.currentTime);
-            const gain = audioCtx.createGain(); gain.gain.setValueAtTime(0.6, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
-            noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); noise.start();
+            const gain = audioCtx.createGain(); gain.gain.setValueAtTime(0.5, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            noise.connect(gain); gain.connect(audioCtx.destination); noise.start();
         }
 
-        // Navigation
-        function showHome() { homeScreen.classList.add('active'); game1Screen.classList.remove('active'); game2Screen.classList.remove('active'); stopGame1(); stopGame2(); }
-
-        // Game 1 Logic
-        let score1 = 0, game1Timeout, isGame1Playing = false;
-        const holes = document.querySelectorAll('.hole');
-        const score1Display = document.getElementById('score1');
-        const gameOver1Popup = document.getElementById('gameOver1');
-
-        function startGame1() { homeScreen.classList.remove('active'); game1Screen.classList.add('active'); gameOver1Popup.style.display = 'none'; score1 = 0; score1Display.innerText = score1; isGame1Playing = true; holes.forEach(h => h.innerHTML = ''); popItem(); }
-        function stopGame1() { isGame1Playing = false; clearTimeout(game1Timeout); }
-
+        // --- Game 1 ---
+        let isGame1Playing = false;
+        function startGame1() { 
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('game1Screen').classList.add('active');
+            isGame1Playing = true; popItem();
+        }
         function popItem() {
-            if (!isGame1Playing) return;
-            const hole = holes[Math.floor(Math.random() * holes.length)];
-            const isBomb = Math.random() < 0.25;
-            hole.innerHTML = '';
-            const el = document.createElement('div');
-            el.className = 'item ' + (isBomb ? 'bomb' : '');
-            el.innerHTML = isBomb ? '💣' : '<img src="ghewari.png">';
-            el.dataset.type = isBomb ? 'bomb' : 'ghewari';
-            el.addEventListener('mousedown', whackItem);
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); whackItem.call(el); });
-            hole.appendChild(el);
-            setTimeout(() => { if (isGame1Playing) el.classList.add('up'); }, 10);
-            game1Timeout = setTimeout(() => { el.classList.remove('up'); if (isGame1Playing) popItem(); }, 800);
+            if(!isGame1Playing) return;
+            const hole = document.getElementById('hole-'+Math.floor(Math.random()*9));
+            hole.innerHTML = '<div class="item" style="background:'+(Math.random()<0.2?'red':'green')+'" onclick="whack(this)"></div>';
+            setTimeout(() => { hole.querySelector('.item')?.classList.add('up'); }, 10);
+            setTimeout(popItem, 1000);
+        }
+        function whack(el) {
+            if(el.style.backgroundColor === 'red') { playExplosion(); alert('BOOM!'); isGame1Playing = false; showHome(); }
+            else { playBeep(); el.remove(); }
         }
 
-        function whackItem() {
-            if (!isGame1Playing) return;
-            if (this.dataset.type === 'bomb') { playExplosion(); isGame1Playing = false; clearTimeout(game1Timeout); this.style.background = 'red'; gameOver1Popup.style.display = 'block'; }
-            else { score1++; score1Display.innerText = score1; this.classList.remove('up'); playBeep(); }
+        // --- Game 2 ---
+        function startGame2() { 
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('game2Screen').classList.add('active');
         }
-
-        // Game 2 Logic
-        const canvas = document.getElementById('flappyCanvas');
-        const ctx = canvas.getContext('2d');
-        const score2Display = document.getElementById('score2');
-        let score2 = 0, frames = 0, game2Req, isGameOver = false;
-        const ghewariImg = new Image(); ghewariImg.src = 'ghewari.png';
-        const bird = { x: 50, y: 150, w: 34, h: 34, gravity: 0.25, velocity: 0, jump: -4.6 };
-        const pipes = { position: [], w: 50, gap: 130, dx: 2, reset: function() { this.position = []; } };
-
-        function startGame2() { homeScreen.classList.remove('active'); game2Screen.classList.add('active'); resetFlappy(); loop(); }
-        function stopGame2() { cancelAnimationFrame(game2Req); }
-        function resetFlappy() { bird.y = 150; bird.velocity = 0; pipes.reset(); score2 = 0; score2Display.innerText = score2; frames = 0; isGameOver = false; }
-
-        function loop() {
-            if(isGameOver) { ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0,canvas.width, canvas.height); ctx.fillStyle = "white"; ctx.font = "30px Arial"; ctx.fillText("GAME OVER", 70, 240); return; }
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            bird.velocity += bird.gravity; bird.y += bird.velocity;
-            ctx.drawImage(ghewariImg, bird.x, bird.y, bird.w, bird.h);
-            if (frames % 100 == 0) pipes.position.push({ x: canvas.width, y: Math.random() * (canvas.height - 180) + 20 });
-            ctx.fillStyle = "#228B22";
-            pipes.position.forEach(p => { p.x -= pipes.dx; ctx.fillRect(p.x, 0, pipes.w, p.y); ctx.fillRect(p.x, p.y + pipes.gap, pipes.w, canvas.height); if (bird.x + bird.w > p.x && bird.x < p.x + pipes.w && (bird.y < p.y || bird.y + bird.h > p.y + pipes.gap)) isGameOver = true; if (p.x + pipes.w === bird.x) { score2++; score2Display.innerText = score2; } });
-            if (bird.y + bird.h >= canvas.height || bird.y <= 0) isGameOver = true;
-            frames++; game2Req = requestAnimationFrame(loop);
-        }
-
-        canvas.addEventListener('mousedown', () => { if(isGameOver) {resetFlappy(); loop();} else { bird.velocity = bird.jump; playBeep(); } });
-        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if(isGameOver) {resetFlappy(); loop();} else { bird.velocity = bird.jump; playBeep(); } });
+        function stopGame1() { isGame1Playing = false; }
+        function stopGame2() {}
     </script>
 </body>
 </html>
