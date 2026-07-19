@@ -8,7 +8,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
-            background-color: #f4f7f6; /* पहले जैसा साफ वाइट/लाइट बैकग्राउंड */
+            background-color: #f4f7f6;
             color: #333;
             margin: 0;
             padding: 20px;
@@ -22,44 +22,24 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.1);
         }
         
-        /* जैनुल भाई की ब्रांडिंग - वाइट थीम के लिए शानदार ग्रेडिएंट एनीमेशन */
         .brand-credit {
-            font-size: 40px;
+            font-size: 35px;
             font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 2px;
             margin-bottom: 20px;
             background: linear-gradient(45deg, #ff416c, #ff4b2b, #00b4db, #0083b0);
-            background-size: 300% 300%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: gradientMove 4s ease infinite, pulseScale 2s infinite alternate;
+            animation: pulseScale 2s infinite alternate;
         }
 
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+        @keyframes pulseScale { 0% { transform: scale(1); } 100% { transform: scale(1.03); } }
 
-        @keyframes pulseScale {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.04); }
-        }
-
-        .main-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            border: 3px solid #eee;
-        }
+        .main-image { max-width: 200px; height: auto; border-radius: 10px; margin-bottom: 20px; border: 3px solid #eee; }
 
         #game-area {
             width: 100%;
             height: 400px;
-            background-color: #e3f2fd; /* लाइट ब्लू गेमिंग एरिया */
+            background-color: #f9f9f9;
             position: relative;
             overflow: hidden;
             border: 3px solid #2196f3;
@@ -67,11 +47,9 @@
             cursor: grab;
             display: none; 
             margin: 20px auto 0 auto;
-            touch-action: none; /* मोबाइल पर स्क्रीन को स्क्रॉल होने से रोकेगा */
+            touch-action: none;
         }
-        #game-area:active {
-            cursor: grabbing;
-        }
+
         .falling-item {
             width: 50px;
             height: 50px;
@@ -80,54 +58,48 @@
             user-select: none;
             pointer-events: none;
         }
+
         #basket {
-            width: 90px;
-            height: 22px;
-            background-color: #ff4757; /* प्यारा लाल रंग का बास्केट */
+            width: 100px;
+            height: 25px;
+            background-color: #ff4757;
             position: absolute;
-            bottom: 15px;
+            bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(255, 71, 87, 0.4);
-            pointer-events: none; /* बास्केट के आर-पार ड्रैग करने में मदद करेगा */
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.6);
+            pointer-events: none;
         }
-        #score-board {
-            font-size: 24px;
+
+        /* काउंटडाउन के लिए */
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
             font-weight: bold;
             color: #2196f3;
-            margin: 15px 0;
+            display: none;
+            z-index: 10;
         }
-        .btn {
-            background-color: #2196f3;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 25px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
-            transition: 0.2s;
-        }
-        .btn:hover {
-            transform: scale(1.05);
-            background-color: #1e88e5;
-        }
+
+        #score-board { font-size: 24px; font-weight: bold; color: #333; margin: 15px 0; }
+        .btn { background-color: #2196f3; color: white; padding: 12px 30px; border: none; border-radius: 25px; font-size: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- यह सबसे ऊपर बड़े और एक्शन ग्रेडिएंट लुक में चमकेगा -->
     <div class="brand-credit">Made by Zainul</div>
-
     <img src="ghewari.png" alt="Ghewari Image" class="main-image">
 
     <div id="score-board">स्कोर: <span id="score">0</span></div>
-    <button class="btn" id="start-btn" onclick="startGame()">गेम चालू करें 🎮</button>
+    <button class="btn" id="start-btn" onclick="startCountdown()">गेम चालू करें 🎮</button>
 
     <div id="game-area">
+        <div id="countdown">3</div>
         <div id="basket"></div>
     </div>
 </div>
@@ -137,118 +109,55 @@
     const basket = document.getElementById('basket');
     const scoreDisplay = document.getElementById('score');
     const startBtn = document.getElementById('start-btn');
+    const countdownEl = document.getElementById('countdown');
 
     let score = 0;
     let gameInterval;
     let isPlaying = false;
-    
-    // स्लाइडर (बास्केट) की पोजीशन ट्रैक करने के लिए वेरिएबल्स
-    let basketX = 150; 
-    let isDragging = false;
-    let startX = 0;
-    let startBasketX = 0;
+    let basketX = 150;
 
-    // साउंड इफेक्ट्स (No external files needed)
-    let audioCtx = null;
-
-    function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-    }
-
-    function playCatchSound() {
-        initAudio();
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(450, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.08);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.08);
-    }
-
-    function playGameOverSound() {
-        initAudio();
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(250, audioCtx.currentTime);
-        osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + 0.35);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.35);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.35);
-    }
-
-    // --- स्मूथ स्लाइडर/ड्रैग कंट्रोल लॉजिक ---
-
-    // माउस ड्रैग शुरू होना
-    gameArea.addEventListener('mousedown', (e) => {
-        if (!isPlaying) return;
-        isDragging = true;
-        startX = e.clientX;
-        startBasketX = basketX;
-    });
-
-    // माउस से स्लाइड करना
-    window.addEventListener('mousemove', (e) => {
-        if (!isDragging || !isPlaying) return;
-        const deltaX = e.clientX - startX;
-        moveBasketSmoothly(startBasketX + deltaX);
-    });
-
-    // माउस छोड़ना
-    window.addEventListener('mouseup', () => { isDragging = false; });
-
-    // मोबाइल टच ड्रैग शुरू होना
-    gameArea.addEventListener('touchstart', (e) => {
-        if (!isPlaying) return;
-        isDragging = true;
-        startX = e.touches[0].clientX;
-        startBasketX = basketX;
-    });
-
-    // मोबाइल पर उंगली से स्लाइड करना
-    window.addEventListener('touchmove', (e) => {
-        if (!isDragging || !isPlaying) return;
-        const deltaX = e.touches[0].clientX - startX;
-        moveBasketSmoothly(startBasketX + deltaX);
-    });
-
-    // मोबाइल टच छोड़ना
-    window.addEventListener('touchend', () => { isDragging = false; });
-
-    function moveBasketSmoothly(newX) {
-        const halfBasket = basket.offsetWidth / 2;
-        // बाउंड्री चेक (स्क्रीन से बाहर न जाए)
-        if (newX < halfBasket) newX = halfBasket;
-        if (newX > gameArea.offsetWidth - halfBasket) newX = gameArea.offsetWidth - halfBasket;
+    // --- काउंटडाउन लॉजिक ---
+    function startCountdown() {
+        startBtn.style.display = 'none';
+        gameArea.style.display = 'block';
+        countdownEl.style.display = 'block';
         
-        basketX = newX;
-        basket.style.left = (basketX - halfBasket) + 'px';
+        let count = 3;
+        countdownEl.innerText = count;
+        
+        let timer = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countdownEl.innerText = count;
+            } else if (count === 0) {
+                countdownEl.innerText = "GO!";
+            } else {
+                clearInterval(timer);
+                countdownEl.style.display = 'none';
+                initGame();
+            }
+        }, 1000);
     }
 
-    function startGame() {
-        initAudio();
-        if (isPlaying) return;
+    function initGame() {
         isPlaying = true;
         score = 0;
         scoreDisplay.innerText = score;
-        startBtn.style.display = 'none';
-        gameArea.style.display = 'block';
-        
-        // शुरुआत में बास्केट को ठीक बीच में सेट करना
         basketX = gameArea.offsetWidth / 2;
         moveBasketSmoothly(basketX);
+        gameInterval = setInterval(createFallingImage, 900);
+    }
 
-        gameInterval = setInterval(createFallingImage, 950);
+    // --- कोलाइडर और मूवमेंट लॉजिक ---
+    gameArea.addEventListener('mousemove', (e) => { if(isPlaying) moveBasketSmoothly(e.clientX - gameArea.getBoundingClientRect().left); });
+    gameArea.addEventListener('touchmove', (e) => { if(isPlaying) moveBasketSmoothly(e.touches[0].clientX - gameArea.getBoundingClientRect().left); });
+
+    function moveBasketSmoothly(newX) {
+        const half = basket.offsetWidth / 2;
+        if (newX < half) newX = half;
+        if (newX > gameArea.offsetWidth - half) newX = gameArea.offsetWidth - half;
+        basketX = newX;
+        basket.style.left = (basketX - half) + 'px';
     }
 
     function createFallingImage() {
@@ -261,46 +170,42 @@
         gameArea.appendChild(img);
 
         let posY = -50;
-        let speed = 4.5 + Math.random() * 2.5;
+        let speed = 5;
 
         function fall() {
             if (!isPlaying) { img.remove(); return; }
             posY += speed;
             img.style.top = posY + 'px';
             
-            if (posY >= 345 && posY <= 375) {
+            // कोलाइडर: यहाँ गणित एकदम सटीक है
+            if (posY >= 355 && posY <= 370) {
                 const imgLeft = parseInt(img.style.left);
-                const halfBasket = basket.offsetWidth / 2;
-                if (imgLeft + 25 >= (basketX - halfBasket) && imgLeft <= (basketX + halfBasket)) {
+                const imgRight = imgLeft + 50;
+                const basketLeft = basketX - (basket.offsetWidth / 2);
+                const basketRight = basketX + (basket.offsetWidth / 2);
+
+                // अगर इमेज और बास्केट का एरिया ओवरलैप होता है
+                if (imgRight >= basketLeft && imgLeft <= basketRight) {
                     score++;
                     scoreDisplay.innerText = score;
-                    playCatchSound();
                     img.remove();
                     return;
                 }
             }
-            if (posY > 400) { 
-                img.remove(); 
-                gameOver(); 
-            } else { 
-                requestAnimationFrame(fall); 
-            }
+
+            if (posY > 400) { img.remove(); gameOver(); } 
+            else { requestAnimationFrame(fall); }
         }
         requestAnimationFrame(fall);
     }
 
     function gameOver() {
         isPlaying = false;
-        isDragging = false;
         clearInterval(gameInterval);
-        playGameOverSound();
-        
-        setTimeout(() => {
-            alert('गेम ओवर! जैनुल भाई की तरफ से आपका फाइनल स्कोर: ' + score);
-            startBtn.style.display = 'inline-block';
-            startBtn.innerText = 'फिर से खेलें 🔄';
-            gameArea.style.display = 'none';
-        }, 50);
+        alert('गेम ओवर! आपका फाइनल स्कोर: ' + score);
+        startBtn.style.display = 'inline-block';
+        startBtn.innerText = 'फिर से खेलें 🔄';
+        gameArea.style.display = 'none';
     }
 </script>
 
