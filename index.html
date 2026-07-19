@@ -92,7 +92,7 @@
             transform: scale(0.95);
         }
 
-        /* BACK BUTTON FIX: Added high z-index and proper positioning */
+        /* BACK BUTTON FIX */
         .back-btn {
             position: absolute;
             top: 20px;
@@ -101,7 +101,7 @@
             font-size: 1rem;
             background: #444;
             box-shadow: none;
-            z-index: 999; /* Fix for button not tapping */
+            z-index: 9999; /* Ensure it is always clickable */
         }
 
         /* Common Score Board */
@@ -139,24 +139,24 @@
             width: 100%;
             height: 100%;
             position: absolute;
-            top: 100%; /* Hidden below */
+            top: 100%;
             left: 0;
             transition: top 0.2s ease-out;
-            cursor: crosshair; /* Hammer style cursor for PC */
+            cursor: crosshair;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .item.up {
-            top: 0; /* Pop up */
+            top: 0;
         }
 
         .item img {
             width: 80%;
             height: 80%;
             object-fit: contain;
-            pointer-events: none; /* Let the container handle the click */
+            pointer-events: none;
         }
 
         .item.bomb {
@@ -240,6 +240,9 @@
     </div>
 
     <script>
+        // --- Setup Audio Context ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
         // --- Global Variables ---
         const homeScreen = document.getElementById('homeScreen');
         const game1Screen = document.getElementById('game1Screen');
@@ -253,6 +256,7 @@
 
         // --- Home Screen Logic ---
         mainGhewari.addEventListener('click', () => {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
             mainSound.currentTime = 0;
             mainSound.play().catch(e => console.log("Audio play error", e));
             
@@ -286,10 +290,8 @@
             score1Display.innerText = score1;
             isGame1Playing = true;
             
-            // Clear all holes
             holes.forEach(hole => hole.innerHTML = '');
-            
-            popItem(); // Start popping
+            popItem(); 
         }
 
         function stopGame1() {
@@ -316,13 +318,12 @@
         function popItem() {
             if (!isGame1Playing) return;
 
-            const time = randomTime(600, 1000); // Items stay up for 0.6 to 1 second
+            const time = randomTime(600, 1000);
             const hole = randomHole(holes);
             
-            // 20% Chance of getting a Bomb
             const isBomb = Math.random() < 0.2; 
             
-            hole.innerHTML = ''; // Clear previous
+            hole.innerHTML = ''; 
             
             const el = document.createElement('div');
             el.classList.add('item');
@@ -343,7 +344,6 @@
 
             hole.appendChild(el);
             
-            // CSS transition trigger
             setTimeout(() => {
                 if (isGame1Playing) el.classList.add('up');
             }, 10);
@@ -358,16 +358,17 @@
             if (!isGame1Playing) return;
 
             if (this.dataset.type === 'bomb') {
-                // Game Over Logic
+                // GAME OVER: Play Explosion Sound!
+                playExplosion();
                 isGame1Playing = false;
                 clearTimeout(game1Timeout);
-                this.style.background = 'red'; // Highlight bomb red
+                this.style.background = 'red'; 
                 gameOver1Popup.style.display = 'block';
             } else {
-                // Score Logic
+                // SCORE!
                 score1++;
                 score1Display.innerText = score1;
-                this.classList.remove('up'); // Hide immediately
+                this.classList.remove('up');
                 playBeep();
             }
         }
@@ -421,13 +422,11 @@
                     let p = this.position[i];
                     p.x -= this.dx;
 
-                    // Collision detection
                     if (bird.x + bird.w > p.x && bird.x < p.x + this.w && 
                         (bird.y < p.y || bird.y + bird.h > p.y + this.gap)) {
                         isGameOver = true;
                     }
 
-                    // Score Update
                     if (p.x + this.w === bird.x) {
                         score2++;
                         score2Display.innerText = score2;
@@ -497,8 +496,7 @@
             }
         }
 
-        // --- Simple Generated Beep Sound ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // --- Sound Generation Functions ---
         function playBeep() {
             if(audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
@@ -512,6 +510,38 @@
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
             osc.start();
             osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        // BOM EXPLOSION SOUND (No external file needed)
+        function playExplosion() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // Create white noise buffer
+            const bufferSize = audioCtx.sampleRate * 1; // 1 second duration
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            
+            // Filter to make it sound bassy/boomy like an explosion
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(100, audioCtx.currentTime); // Low frequency rumble
+            
+            // Gain to control volume fade out
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1); // Fade out over 1 sec
+            
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            noise.start();
         }
     </script>
 </body>
