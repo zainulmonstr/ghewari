@@ -8,33 +8,59 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
-            background-color: #f4f7f6;
+            background-color: #1a1a2e; /* थोड़ा डार्क और मॉडर्न बैकग्राउंड */
+            color: #fff;
             margin: 0;
             padding: 20px;
         }
         .container {
             max-width: 600px;
             margin: 0 auto;
-            background: white;
+            background: #162447;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        h1 { color: #2c3e50; }
+        
+        /* जैनुल भाई की ब्रांडिंग - बड़े और एक्शन एनीमेशन के साथ */
+        .brand-credit {
+            font-size: 38px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: #00fff5;
+            text-shadow: 0 0 10px #00fff5, 0 0 20px #00fff5;
+            animation: pulseGlow 2s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                transform: scale(1);
+                text-shadow: 0 0 10px #00fff5, 0 0 20px #00fff5;
+            }
+            100% {
+                transform: scale(1.05);
+                text-shadow: 0 0 20px #00fff5, 0 0 40px #00fff5, 0 0 60px #00fff5;
+            }
+        }
+
         .main-image {
             max-width: 100%;
             height: auto;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             margin-bottom: 20px;
+            border: 2px solid #00fff5;
         }
+
         #game-area {
             width: 100%;
             height: 400px;
-            background-color: #e0f2f1;
+            background-color: #1f4068;
             position: relative;
             overflow: hidden;
-            border: 3px solid #009688;
+            border: 3px solid #00fff5;
             border-radius: 10px;
             cursor: crosshair;
             display: none; 
@@ -48,50 +74,54 @@
             user-select: none;
         }
         #basket {
-            width: 80px;
+            width: 90px;
             height: 20px;
-            background-color: #d32f2f;
+            background-color: #e94560;
             position: absolute;
             bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
             border-radius: 5px;
+            box-shadow: 0 0 15px #e94560;
         }
-        #credit-msg {
-            display: none; /* शुरुआत में छुपा रहेगा */
-            font-size: 20px;
+        #score-board {
+            font-size: 24px;
             font-weight: bold;
-            color: #555;
-            margin-top: 20px;
-            padding: 10px;
-            border-top: 2px solid #eee;
+            color: #00fff5;
+            margin: 15px 0;
         }
         .btn {
-            background-color: #009688;
-            color: white;
-            padding: 12px 25px;
+            background-color: #00fff5;
+            color: #1a1a2e;
+            padding: 12px 30px;
             border: none;
             border-radius: 25px;
-            font-size: 18px;
+            font-size: 20px;
+            font-weight: bold;
             cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 255, 245, 0.4);
+            transition: 0.2s;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 25px rgba(0, 255, 245, 0.8);
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>हमारी वेबसाइट पर आपका स्वागत है!</h1>
+    <!-- यह वेबसाइट खुलते ही सबसे ऊपर बड़े और शानदार एनीमेशन में दिखेगा -->
+    <div class="brand-credit">Made by Zainul</div>
+
     <img src="ghewari.png" alt="Ghewari Image" class="main-image">
 
     <div id="score-board">स्कोर: <span id="score">0</span></div>
-    <button class="btn" id="start-btn" onclick="startGame()">गेम चालू करें</button>
+    <button class="btn" id="start-btn" onclick="startGame()">गेम चालू करें 🎮</button>
 
     <div id="game-area">
         <div id="basket"></div>
     </div>
-
-    <!-- यह मैसेज गेम खत्म होने पर दिखेगा -->
-    <p id="credit-msg">Made by Zainul</p>
 </div>
 
 <script>
@@ -99,32 +129,77 @@
     const basket = document.getElementById('basket');
     const scoreDisplay = document.getElementById('score');
     const startBtn = document.getElementById('start-btn');
-    const creditMsg = document.getElementById('credit-msg');
 
     let score = 0;
     let gameInterval;
     let isPlaying = false;
-    let basketX = 300; // शुरुआत में बीच में
+    let basketX = 300;
 
+    // साउंड इफेक्ट्स जनरेट करने के लिए कोड (No external files needed!)
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playCatchSound() {
+        initAudio();
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playGameOverSound() {
+        initAudio();
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.4);
+        
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+    }
+
+    // माउस और टच मूवमेंट
     gameArea.addEventListener('mousemove', (e) => {
         if (!isPlaying) return;
         const rect = gameArea.getBoundingClientRect();
         let relX = e.clientX - rect.left;
-        if (relX < 40) relX = 40;
-        if (relX > gameArea.offsetWidth - 40) relX = gameArea.offsetWidth - 40;
+        if (relX < 45) relX = 45;
+        if (relX > gameArea.offsetWidth - 45) relX = gameArea.offsetWidth - 45;
         basketX = relX;
-        basket.style.left = (basketX - 40) + 'px';
+        basket.style.left = (basketX - 45) + 'px';
     });
 
     function startGame() {
+        initAudio(); // यूजर क्लिक पर ऑडियो एक्टिवेट करना
         if (isPlaying) return;
         isPlaying = true;
         score = 0;
         scoreDisplay.innerText = score;
         startBtn.style.display = 'none';
-        creditMsg.style.display = 'none'; // गेम शुरू होने पर क्रेडिट छुपाएं
         gameArea.style.display = 'block';
-        gameInterval = setInterval(createFallingImage, 1000);
+        gameInterval = setInterval(createFallingImage, 900); // थोड़ी स्पीड बढ़ाई ताकि मज़ा आए
     }
 
     function createFallingImage() {
@@ -137,21 +212,29 @@
         gameArea.appendChild(img);
 
         let posY = -50;
+        let speed = 5 + Math.random() * 3;
+
         function fall() {
             if (!isPlaying) { img.remove(); return; }
-            posY += 5;
+            posY += speed;
             img.style.top = posY + 'px';
+            
             if (posY >= 350 && posY <= 380) {
                 const imgLeft = parseInt(img.style.left);
-                if (imgLeft + 25 >= (basketX - 40) && imgLeft <= (basketX + 40)) {
+                if (imgLeft + 25 >= (basketX - 45) && imgLeft <= (basketX + 45)) {
                     score++;
                     scoreDisplay.innerText = score;
+                    playCatchSound(); // कैच करने पर साउंड
                     img.remove();
                     return;
                 }
             }
-            if (posY > 400) { img.remove(); gameOver(); }
-            else { requestAnimationFrame(fall); }
+            if (posY > 400) { 
+                img.remove(); 
+                gameOver(); 
+            } else { 
+                requestAnimationFrame(fall); 
+            }
         }
         requestAnimationFrame(fall);
     }
@@ -159,14 +242,14 @@
     function gameOver() {
         isPlaying = false;
         clearInterval(gameInterval);
-        alert('गेम ओवर! आपका फाइनल स्कोर: ' + score);
+        playGameOverSound(); // गेम ओवर होने पर साउंड
         
-        startBtn.style.display = 'inline-block';
-        startBtn.innerText = 'फिर से खेलें';
-        gameArea.style.display = 'none';
-        
-        // यहाँ "Made by Zainul" दिखाएंगे
-        creditMsg.style.display = 'block'; 
+        setTimeout(() => {
+            alert('गेम ओवर! जैनुल भाई की तरफ से आपका फाइनल स्कोर: ' + score);
+            startBtn.style.display = 'inline-block';
+            startBtn.innerText = 'फिर से खेलें 🔄';
+            gameArea.style.display = 'none';
+        }, 50);
     }
 </script>
 
