@@ -3,80 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghewari | Elite Professional Game</title>
+    <title>Ghewari | Elite Game</title>
     <style>
-        /* CSS Variables for Consistency */
-        :root {
-            --bg-color: #0f172a;
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --accent: #6366f1;
-            --text-color: #ffffff;
-        }
-
+        :root { --bg-color: #0f172a; --accent: #6366f1; }
         * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            margin: 0; padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; overflow: hidden;
+        
+        body { 
+            margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--bg-color); color: white;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
         }
 
-        /* Responsive Wrapper to fix Orientation issues */
         #viewport {
-            width: 95vw; height: 90vh;
-            max-width: 600px;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            background: var(--glass-bg);
-            border-radius: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            width: 100vw; height: 100vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             position: relative;
         }
 
-        /* Screen Styles */
-        .screen { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        #game-screen { display: none; }
-
-        .brand-title { font-size: 2rem; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); }
-        .main-hero-img { width: 60%; max-width: 200px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 30px; }
-
-        /* Game UI */
-        #game-area {
-            position: relative; width: 100%; height: 70%;
-            background: rgba(0,0,0,0.2); border-radius: 15px;
-            overflow: hidden; cursor: crosshair; margin-bottom: 10px;
-        }
-        .falling-item { position: absolute; width: 12%; max-width: 50px; pointer-events: none; }
-        #basket {
-            position: absolute; bottom: 10px; width: 20%; max-width: 100px;
-            height: 15px; background: #fff; border-radius: 5px;
-            box-shadow: 0 0 15px rgba(255,255,255,0.8);
+        /* --- HOME SCREEN --- */
+        #home-screen { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px; }
+        
+        .brand { font-size: 2.5rem; font-weight: 900; margin-bottom: 20px; color: var(--accent); text-transform: uppercase; }
+        
+        /* इमेज को बड़ी और साफ़ रखा है */
+        .big-hero-img { 
+            width: 80vw; max-width: 450px; 
+            border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
+            border: 5px solid rgba(255,255,255,0.1); margin-bottom: 30px;
         }
 
-        #score-display { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; }
-        .btn {
+        .btn { 
             background: linear-gradient(135deg, var(--accent), #ec4899);
-            color: white; border: none; padding: 15px 40px; border-radius: 50px;
-            font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.3s;
+            color: white; border: none; padding: 18px 50px; border-radius: 50px;
+            font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: 0.3s;
         }
+
+        /* --- GAME SCREEN --- */
+        #game-screen { display: none; width: 100%; height: 100%; position: relative; }
+        #game-area { position: relative; width: 100%; height: 100%; overflow: hidden; background: rgba(0,0,0,0.3); }
+        
+        .falling-item { position: absolute; width: 12%; max-width: 60px; pointer-events: none; }
+        #basket { 
+            position: absolute; bottom: 30px; width: 25%; max-width: 120px;
+            height: 20px; background: #fff; border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+        }
+
+        #score-display { position: absolute; top: 20px; right: 20px; font-size: 3rem; font-weight: 900; z-index: 10; }
     </style>
 </head>
 <body>
 
 <div id="viewport">
-    <!-- START SCREEN -->
-    <div id="start-screen" class="screen">
-        <div class="brand-title">Made by Zainul</div>
-        <img src="ghewari.png" alt="Ghewari" class="main-hero-img">
-        <button class="btn" onclick="GameEngine.start()">START GAME 🚀</button>
+    <!-- HOME SCREEN -->
+    <div id="home-screen">
+        <div class="brand">Made by Zainul</div>
+        <img src="ghewari.png" alt="Ghewari" class="big-hero-img">
+        <button class="btn" onclick="GameEngine.init()">START GAME 🚀</button>
     </div>
 
     <!-- GAME SCREEN -->
-    <div id="game-screen" class="screen">
+    <div id="game-screen">
         <div id="score-display">0</div>
         <div id="game-area">
             <div id="basket"></div>
@@ -86,35 +73,25 @@
 
 <script>
     const GameEngine = {
-        score: 0,
-        speed: 5,
-        isRunning: false,
+        score: 0, speed: 5, isRunning: false,
         audioCtx: new (window.AudioContext || window.webkitAudioContext)(),
 
-        // Sound System
         playSound(type) {
             const osc = this.audioCtx.createOscillator();
             const gain = this.audioCtx.createGain();
             osc.connect(gain); gain.connect(this.audioCtx.destination);
-            if(type === 'catch') { osc.frequency.value = 800; gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.1); }
-            else { osc.type = 'sawtooth'; osc.frequency.value = 200; gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.5); }
-            osc.start(); osc.stop(this.audioCtx.currentTime + (type === 'catch' ? 0.1 : 0.5));
+            osc.frequency.value = (type === 'catch') ? 800 : 200;
+            gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(this.audioCtx.currentTime + 0.2);
         },
 
-        // Initialization
-        start() {
+        init() {
             if(this.audioCtx.state === 'suspended') this.audioCtx.resume();
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'flex';
-            this.score = 0; this.speed = 5; this.isRunning = true;
-            this.gameLoop();
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            this.isRunning = true;
             this.spawn();
-        },
-
-        // Game Loop & Physics
-        gameLoop() {
-            if(!this.isRunning) return;
-            requestAnimationFrame(() => this.gameLoop());
         },
 
         spawn() {
@@ -122,7 +99,7 @@
             const item = document.createElement('img');
             item.src = 'ghewari.png';
             item.className = 'falling-item';
-            item.style.left = Math.random() * 80 + '%';
+            item.style.left = (Math.random() * 80) + '%';
             item.style.top = '-10%';
             document.getElementById('game-area').appendChild(item);
 
@@ -130,9 +107,9 @@
             const animate = () => {
                 if(!this.isRunning) { item.remove(); return; }
                 posY += this.speed;
-                item.style.top = posY + 'px';
+                item.style.top = (posY / window.innerHeight * 100) + 'vh';
 
-                // Precision Collision Detection
+                // COLLISION LOGIC (Precise)
                 const itemRect = item.getBoundingClientRect();
                 const basketRect = document.getElementById('basket').getBoundingClientRect();
 
@@ -140,23 +117,19 @@
                     this.playSound('catch');
                     this.score++;
                     document.getElementById('score-display').innerText = this.score;
-                    this.speed += 0.1;
+                    this.speed += 0.15;
                     item.remove();
                     return;
                 }
 
-                if(posY > document.getElementById('game-area').clientHeight) {
-                    item.remove();
-                    this.gameOver();
-                } else {
-                    requestAnimationFrame(animate);
-                }
+                if(posY > window.innerHeight) { item.remove(); this.end(); }
+                else { requestAnimationFrame(animate); }
             };
             animate();
-            setTimeout(() => this.spawn(), Math.max(300, 1000 - (this.score * 20)));
+            setTimeout(() => this.spawn(), Math.max(400, 1000 - (this.score * 30)));
         },
 
-        gameOver() {
+        end() {
             this.isRunning = false;
             this.playSound('over');
             alert("Game Over! Score: " + this.score);
@@ -164,21 +137,20 @@
         }
     };
 
-    // Controls
+    // Controller
     const gameArea = document.getElementById('game-area');
     const basket = document.getElementById('basket');
     
-    function updateBasket(e) {
+    function move(e) {
         const rect = gameArea.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         let pos = ((clientX - rect.left) / rect.width) * 100;
-        pos = Math.max(5, Math.min(95, pos));
+        pos = Math.max(10, Math.min(90, pos));
         basket.style.left = pos + "%";
     }
 
-    gameArea.addEventListener('mousemove', updateBasket);
-    gameArea.addEventListener('touchmove', updateBasket);
-
+    gameArea.addEventListener('mousemove', move);
+    gameArea.addEventListener('touchmove', move);
 </script>
 </body>
 </html>
