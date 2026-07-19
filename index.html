@@ -1,170 +1,191 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghewari | Elite Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ghewari Game</title>
     <style>
-        /* पूरी स्क्रीन को लॉक कर दिया है ताकि स्क्रॉल न हो */
-        html, body { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; background-color: #0f172a; color: white;
-            font-family: 'Segoe UI', sans-serif;
+        /* Modern UI & Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: manipulation; /* Mobile pe double-tap zoom rokne ke liye */
         }
 
-        #viewport {
-            width: 100vw; height: 100vh;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            position: relative;
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #2a2a4a);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            padding: 20px 10px;
         }
 
-        /* --- HOME SCREEN --- */
-        #home-screen { 
-            display: flex; flex-direction: column; 
-            align-items: center; justify-content: center;
-            width: 100%; height: 100%; padding: 10px;
-        }
-        
-        .brand { font-size: 2rem; font-weight: 900; margin-bottom: 10px; color: #6366f1; }
-        
-        /* इमेज को स्क्रीन के हिसाब से एडजस्ट किया है */
-        .big-hero-img { 
-            max-width: 90%; max-height: 55vh; 
-            border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-            margin-bottom: 20px; object-fit: contain;
+        /* Made by Zainul Header */
+        header {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            font-weight: 700;
+            color: #00d2ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+            margin-top: 2vh;
         }
 
-        .btn { 
-            background: linear-gradient(135deg, #6366f1, #ec4899);
-            color: white; border: none; padding: 15px 40px; border-radius: 50px;
-            font-size: 1.2rem; font-weight: bold; cursor: pointer;
+        /* Bada Score Display */
+        #scoreBoard {
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 900;
+            color: #ffcc00;
+            text-shadow: 4px 4px 0px #ff3366, 0 0 20px rgba(255, 204, 0, 0.6);
+            margin: 2vh 0;
+            z-index: 10;
         }
 
-        /* --- GAME SCREEN --- */
-        #game-screen { display: none; width: 100%; height: 100%; position: relative; }
-        
-        #game-area { 
-            position: relative; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.3); touch-action: none;
-        }
-        
-        .falling-item { 
-            position: absolute; width: 50px; height: 50px; 
-            pointer-events: none; 
-        }
-        
-        #basket { 
-            position: absolute; bottom: 20px; width: 100px; height: 20px; 
-            background: #fff; border-radius: 10px; box-shadow: 0 0 20px #fff;
+        /* Image Container & Animation */
+        .game-area {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
         }
 
-        #score-display { 
-            position: absolute; top: 10px; right: 20px; font-size: 2rem; font-weight: 900; z-index: 10;
+        #gameImage {
+            width: clamp(150px, 40vmin, 400px); /* Screen ke hisaab se auto adjust */
+            height: auto;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+            transition: transform 0.1s ease-out;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* Game start hone pe ghumne ka animation */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .spin-anim {
+            animation: spin 5s linear infinite; /* Shuru me 5 second me ek chakkkar (Dhire) */
+        }
+
+        /* Click karne par bounce effect */
+        .click-pop {
+            transform: scale(0.9) !important;
+        }
+
+        /* Start Button */
+        #startBtn {
+            background: linear-gradient(90deg, #ff3366, #ff9933);
+            border: none;
+            color: white;
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            font-weight: bold;
+            padding: 15px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(255, 51, 102, 0.4);
+            transition: all 0.3s ease;
+            margin-bottom: 3vh;
+            text-transform: uppercase;
+        }
+
+        #startBtn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(255, 51, 102, 0.6);
+        }
+
+        #startBtn:active {
+            transform: translateY(2px);
         }
     </style>
 </head>
 <body>
 
-<div id="viewport">
-    <!-- HOME SCREEN -->
-    <div id="home-screen">
-        <div class="brand">Made by Zainul</div>
-        <img src="ghewari.png" alt="Ghewari" class="big-hero-img">
-        <button class="btn" onclick="GameEngine.init()">START GAME 🚀</button>
+    <!-- Header -->
+    <header>Made by Zainul</header>
+
+    <!-- Score -->
+    <div id="scoreBoard">0</div>
+
+    <!-- Main Game Image -->
+    <div class="game-area">
+        <img src="ghewari.png" id="gameImage" alt="Ghewari">
     </div>
 
-    <!-- GAME SCREEN -->
-    <div id="game-screen">
-        <div id="score-display">0</div>
-        <div id="game-area">
-            <div id="basket"></div>
-        </div>
-    </div>
-</div>
+    <!-- Start Button -->
+    <button id="startBtn">Start Game</button>
 
-<script>
-    const GameEngine = {
-        score: 0, speed: 5, isRunning: false,
-        audioCtx: new (window.AudioContext || window.webkitAudioContext)(),
+    <!-- Audio File -->
+    <audio id="tapSound" src="ghewari.mp3" preload="auto"></audio>
 
-        playSound(type) {
-            const osc = this.audioCtx.createOscillator();
-            const gain = this.audioCtx.createGain();
-            osc.connect(gain); gain.connect(this.audioCtx.destination);
-            osc.frequency.value = (type === 'catch') ? 800 : 200;
-            gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.2);
-            osc.start(); osc.stop(this.audioCtx.currentTime + 0.2);
-        },
+    <script>
+        const gameImage = document.getElementById('gameImage');
+        const scoreBoard = document.getElementById('scoreBoard');
+        const startBtn = document.getElementById('startBtn');
+        const tapSound = document.getElementById('tapSound');
 
-        init() {
-            if(this.audioCtx.state === 'suspended') this.audioCtx.resume();
-            document.getElementById('home-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'block';
-            this.isRunning = true;
-            this.spawn();
-        },
+        let score = 0;
+        let isPlaying = false;
+        let currentSpinDuration = 5; // Shuru me dhire ghumega (5 seconds)
 
-        spawn() {
-            if(!this.isRunning) return;
-            const item = document.createElement('img');
-            item.src = 'ghewari.png';
-            item.className = 'falling-item';
-            // रैंडम पोजीशन, स्क्रीन की चौड़ाई के अंदर
-            item.style.left = (Math.random() * (window.innerWidth - 50)) + 'px';
-            item.style.top = '-60px';
-            document.getElementById('game-area').appendChild(item);
+        // Game Start Logic
+        startBtn.addEventListener('click', () => {
+            score = 0;
+            scoreBoard.innerText = score;
+            isPlaying = true;
+            currentSpinDuration = 5;
+            
+            // Image ghumna shuru
+            gameImage.classList.add('spin-anim');
+            gameImage.style.animationDuration = currentSpinDuration + 's';
+            
+            // Button ka text change
+            startBtn.innerText = "Restart Game";
+            
+            // Optional: Button ko thoda light ya chota kar sakte hain taaki focus game pe rahe
+            startBtn.style.opacity = "0.7";
+        });
 
-            let posY = 0;
-            const animate = () => {
-                if(!this.isRunning) { item.remove(); return; }
-                posY += this.speed;
-                item.style.top = posY + 'px';
+        // Image Click (Tap) Logic
+        gameImage.addEventListener('mousedown', handleTap);
+        gameImage.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Mobile pe extra zoom/scroll rokne ke liye
+            handleTap();
+        });
 
-                // COLLISION LOGIC
-                const itemRect = item.getBoundingClientRect();
-                const basketRect = document.getElementById('basket').getBoundingClientRect();
+        function handleTap() {
+            if (!isPlaying) return; // Agar game start nahi hua to kuch mat karo
 
-                if(itemRect.bottom >= basketRect.top && itemRect.right >= basketRect.left && itemRect.left <= basketRect.right) {
-                    this.playSound('catch');
-                    this.score++;
-                    document.getElementById('score-display').innerText = this.score;
-                    this.speed += 0.15;
-                    item.remove();
-                    return;
-                }
+            // 1. Score badhao
+            score++;
+            scoreBoard.innerText = score;
 
-                if(posY > window.innerHeight) { item.remove(); this.end(); }
-                else { requestAnimationFrame(animate); }
-            };
-            animate();
-            setTimeout(() => this.spawn(), Math.max(400, 1000 - (this.score * 30)));
-        },
+            // 2. Sound bajao (ghewari.mp3)
+            tapSound.currentTime = 0; // Taki jaldi jaldi tap karne pe sound repeat ho sake
+            tapSound.play().catch(e => console.log("Sound play error (browser policy):", e));
 
-        end() {
-            this.isRunning = false;
-            this.playSound('over');
-            alert("Game Over! Score: " + this.score);
-            location.reload();
+            // 3. Speed Tez Karo (Animation duration kam karke)
+            if (currentSpinDuration > 0.3) { 
+                currentSpinDuration -= 0.15; // Har tap pe thoda tez hoga
+                gameImage.style.animationDuration = currentSpinDuration + 's';
+            }
+
+            // 4. Click Pop Effect (Maza aane ke liye)
+            gameImage.classList.add('click-pop');
+            setTimeout(() => {
+                gameImage.classList.remove('click-pop');
+            }, 100); // 100ms ke baad bounce back hoga
         }
-    };
-
-    // Controller
-    const gameArea = document.getElementById('game-area');
-    const basket = document.getElementById('basket');
-    
-    function move(e) {
-        const rect = gameArea.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        // बास्केट को बाउंड्री के अंदर रखें
-        let pos = clientX - (basket.offsetWidth / 2);
-        pos = Math.max(0, Math.min(window.innerWidth - basket.offsetWidth, pos));
-        basket.style.left = pos + "px";
-    }
-
-    gameArea.addEventListener('mousemove', move);
-    gameArea.addEventListener('touchmove', move);
-</script>
+    </script>
 </body>
 </html>
