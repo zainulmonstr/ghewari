@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghewari Catch Game</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(160deg, #ff9a56 0%, #ff6a88 45%, #a855f7 100%);
+  }
+
+  .credit {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    z-index: 50;
+    background: rgba(255,255,255,0.15);
+    padding: 6px 16px;
+    border-radius: 20px;
+    backdrop-filter: blur(3px);
+  }
+
+  /* ---------- Splash / Image Screen ---------- */
+  #splashScreen {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+  }
+
+  h1 {
+    color: #fff;
+    text-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    font-size: 2rem;
+    letter-spacing: 1px;
+  }
+
+  .image-frame {
+    background: rgba(255,255,255,0.15);
+    padding: 14px;
+    border-radius: 22px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+    backdrop-filter: blur(4px);
+  }
+
+  #ghewariImg {
+    width: 280px;
+    height: 280px;
+    object-fit: cover;
+    border-radius: 16px;
+    display: block;
+  }
+
+  .img-missing {
+    width: 280px;
+    height: 280px;
+    border-radius: 16px;
+    background: repeating-linear-gradient(45deg, #fff3, #fff3 10px, #fff1 10px, #fff1 20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9rem;
+  }
+
+  .play-btn {
+    background: linear-gradient(135deg, #ffd166, #ff6b6b);
+    color: #4a1a1a;
+    font-size: 1.15rem;
+    font-weight: 700;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .play-btn:hover { transform: translateY(-3px) scale(1.03); }
+  .play-btn:active { transform: translateY(0) scale(0.98); }
+
+  /* ---------- Game Screen ---------- */
+  #gameScreen {
+    display: none;
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  #hud {
+    position: absolute;
+    top: 46px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    z-index: 40;
+  }
+  #hud span {
+    background: rgba(255,255,255,0.85);
+    color: #7b2ff7;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  .falling {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    pointer-events: none;
+  }
+
+  #bucket {
+    position: absolute;
+    bottom: 20px;
+    width: 90px;
+    height: 70px;
+    font-size: 60px;
+    text-align: center;
+    line-height: 70px;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35));
+    z-index: 30;
+  }
+
+  #startOverlay, #gameOverOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: rgba(0,0,0,0.35);
+    z-index: 60;
+  }
+  #startOverlay { display: flex; }
+  #gameOverOverlay { display: none; }
+
+  .overlay-title {
+    color: #fff;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-shadow: 0 3px 10px rgba(0,0,0,0.35);
+    text-align: center;
+    padding: 0 20px;
+  }
+
+  .overlay-sub {
+    color: #ffe;
+    font-size: 1rem;
+    text-align: center;
+    padding: 0 30px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="credit">✦ Made by Zainul ✦</div>
+
+  <!-- SPLASH SCREEN -->
+  <div id="splashScreen">
+    <h1>🥮 Ghewari Catch</h1>
+    <div class="image-frame">
+      <img id="ghewariImg" src="ghewari.png" alt="Ghewari"
+           onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'img-missing',innerText:'ghewari.png nahi mili — isse index.html ke saath same folder mein rakho'}))">
+    </div>
+    <button class="play-btn" onclick="goToGame()">🎮 Game Khelo</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen">
+    <div id="hud">
+      <span id="scoreDisp">Score: 0</span>
+      <span id="livesDisp">❤️❤️❤️</span>
+      <span id="speedDisp">Speed: 1.0x</span>
+    </div>
+
+    <div id="bucket">🪣</div>
+
+    <div id="startOverlay">
+      <div class="overlay-title">Bucket move karo aur<br>ghewari pakdo!</div>
+      <div class="overlay-sub">Mouse / finger se drag karo, ya ⬅️➡️ arrow keys dabao</div>
+      <button class="play-btn" onclick="startGame()">Shuru Karo</button>
+    </div>
+
+    <div id="gameOverOverlay">
+      <div class="overlay-title">😅 Game Over!</div>
+      <div class="overlay-sub" id="finalScoreText">Score: 0</div>
+      <button class="play-btn" onclick="restartGame()">🔁 Phir Se Khelo</button>
+      <button class="play-btn" onclick="backToSplash()" style="background:linear-gradient(135deg,#a855f7,#7b2ff7); color:#fff;">⬅ Wapas</button>
+    </div>
+  </div>
+
+<script>
+  /* ---------------- Audio (Web Audio API - no external files) ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+  function playTone(freq, duration, type, volume) {
+    try {
+      const ctx = getCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(volume || 0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch (e) {}
+  }
+  function playCatchSound() {
+    playTone(660, 0.08, 'triangle', 0.25);
+    setTimeout(() => playTone(880, 0.12, 'triangle', 0.2), 60);
+  }
+  function playMissSound() {
+    playTone(180, 0.25, 'sawtooth', 0.2);
+  }
+  function playGameOverSound() {
+    playTone(400, 0.15, 'square', 0.2);
+    setTimeout(() => playTone(300, 0.15, 'square', 0.2), 150);
+    setTimeout(() => playTone(200, 0.3, 'square', 0.2), 300);
+  }
+  function playStartSound() {
+    playTone(440, 0.1, 'sine', 0.2);
+    setTimeout(() => playTone(660, 0.15, 'sine', 0.2), 100);
+  }
+
+  /* ---------------- Game State ---------------- */
+  const gameScreen = document.getElementById('gameScreen');
+  const bucket = document.getElementById('bucket');
+  const scoreDisp = document.getElementById('scoreDisp');
+  const livesDisp = document.getElementById('livesDisp');
+  const speedDisp = document.getElementById('speedDisp');
+  const startOverlay = document.getElementById('startOverlay');
+  const gameOverOverlay = document.getElementById('gameOverOverlay');
+  const finalScoreText = document.getElementById('finalScoreText');
+
+  let score = 0;
+  let lives = 3;
+  let speedMultiplier = 1;
+  let bucketX = window.innerWidth / 2;
+  const bucketWidth = 90;
+  let items = [];
+  let spawnTimer = null;
+  let loopId = null;
+  let running = false;
+  let elapsedFrames = 0;
+
+  function goToGame() {
+    document.getElementById('splashScreen').style.display = 'none';
+    gameScreen.style.display = 'block';
+    startOverlay.style.display = 'flex';
+    gameOverOverlay.style.display = 'none';
+  }
+
+  function backToSplash() {
+    stopGame();
+    gameScreen.style.display = 'none';
+    document.getElementById('splashScreen').style.display = 'flex';
+  }
+
+  function startGame() {
+    playStartSound();
+    score = 0;
+    lives = 3;
+    speedMultiplier = 1;
+    elapsedFrames = 0;
+    updateHud();
+    startOverlay.style.display = 'none';
+    gameOverOverlay.style.display = 'none';
+    clearItems();
+    running = true;
+    bucketX = window.innerWidth / 2;
+    positionBucket();
+    spawnLoop();
+    gameLoop();
+  }
+
+  function restartGame() {
+    startGame();
+  }
+
+  function stopGame() {
+    running = false;
+    clearTimeout(spawnTimer);
+    cancelAnimationFrame(loopId);
+    clearItems();
+  }
+
+  function clearItems() {
+    items.forEach(it => it.el.remove());
+    items = [];
+  }
+
+  function updateHud() {
+    scoreDisp.textContent = 'Score: ' + score;
+    livesDisp.textContent = '❤️'.repeat(Math.max(lives, 0)) + '🖤'.repeat(Math.max(3 - lives, 0));
+    speedDisp.textContent = 'Speed: ' + speedMultiplier.toFixed(1) + 'x';
+  }
+
+  function positionBucket() {
+    bucket.style.left = (bucketX - bucketWidth / 2) + 'px';
+  }
+
+  /* ---- Bucket control: mouse/touch drag + arrow keys ---- */
+  function moveBucketTo(clientX) {
+    bucketX = Math.max(bucketWidth / 2, Math.min(window.innerWidth - bucketWidth / 2, clientX));
+    positionBucket();
+  }
+  gameScreen.addEventListener('mousemove', (e) => { if (running) moveBucketTo(e.clientX); });
+  gameScreen.addEventListener('touchmove', (e) => {
+    if (running && e.touches[0]) moveBucketTo(e.touches[0].clientX);
+    e.preventDefault();
+  }, { passive: false });
+
+  const keysDown = {};
+  document.addEventListener('keydown', (e) => { keysDown[e.key] = true; });
+  document.addEventListener('keyup', (e) => { keysDown[e.key] = false; });
+
+  /* ---------------- Spawning falling ghewari images ---------------- */
+  function spawnItem() {
+    if (!running) return;
+    const el = document.createElement('img');
+    el.src = 'ghewari.png';
+    el.className = 'falling';
+    el.onerror = function () {
+      // fallback emoji block if image missing
+      const div = document.createElement('div');
+      div.className = 'falling';
+      div.style.display = 'flex';
+      div.style.alignItems = 'center';
+      div.style.justifyContent = 'center';
+      div.style.fontSize = '34px';
+      div.style.background = '#ffde59';
+      div.innerText = '🥮';
+      div.style.left = el.style.left;
+      div.style.top = el.style.top;
+      el.replaceWith(div);
+      const idx = items.findIndex(it => it.el === el);
+      if (idx !== -1) items[idx].el = div;
+    };
+    const x = Math.random() * (window.innerWidth - 56);
+    el.style.left = x + 'px';
+    el.style.top = '-60px';
+    gameScreen.appendChild(el);
+
+    const baseSpeed = 2.2;
+    items.push({
+      el,
+      x,
+      y: -60,
+      speed: baseSpeed * speedMultiplier + Math.random() * 1.2
+    });
+
+    // schedule next spawn — gets a bit faster as speedMultiplier grows
+    const nextDelay = Math.max(1400 - speedMultiplier * 130, 500) + Math.random() * 300;
+    spawnTimer = setTimeout(spawnItem, nextDelay);
+  }
+
+  function spawnLoop() {
+    spawnTimer = setTimeout(spawnItem, 800);
+  }
+
+  /* ---------------- Main Game Loop ---------------- */
+  function gameLoop() {
+    if (!running) return;
+
+    // keyboard bucket movement
+    if (keysDown['ArrowLeft']) moveBucketTo(bucketX - 9);
+    if (keysDown['ArrowRight']) moveBucketTo(bucketX + 9);
+
+    elapsedFrames++;
+    // gradually increase difficulty every ~5 seconds (assuming ~60fps)
+    if (elapsedFrames % 300 === 0) {
+      speedMultiplier = Math.min(speedMultiplier + 0.3, 5);
+      updateHud();
+    }
+
+    const bucketRect = { left: bucketX - bucketWidth / 2, right: bucketX + bucketWidth / 2, top: window.innerHeight - 95, bottom: window.innerHeight - 15 };
+
+    for (let i = items.length - 1; i >= 0; i--) {
+      const it = items[i];
+      it.y += it.speed;
+      it.el.style.top = it.y + 'px';
+
+      const itemBottom = it.y + 56;
+      const itemCenterX = it.x + 28;
+
+      // collision with bucket
+      if (itemBottom >= bucketRect.top && it.y <= bucketRect.bottom &&
+          itemCenterX >= bucketRect.left && itemCenterX <= bucketRect.right) {
+        score += 10;
+        playCatchSound();
+        it.el.remove();
+        items.splice(i, 1);
+        updateHud();
+        continue;
+      }
+
+      // missed — fell past bottom
+      if (it.y > window.innerHeight) {
+        lives--;
+        playMissSound();
+        it.el.remove();
+        items.splice(i, 1);
+        updateHud();
+        if (lives <= 0) {
+          endGame();
+          return;
+        }
+      }
+    }
+
+    loopId = requestAnimationFrame(gameLoop);
+  }
+
+  function endGame() {
+    running = false;
+    clearTimeout(spawnTimer);
+    cancelAnimationFrame(loopId);
+    playGameOverSound();
+    finalScoreText.textContent = 'Final Score: ' + score;
+    gameOverOverlay.style.display = 'flex';
+    clearItems();
+  }
+
+  window.addEventListener('resize', () => {
+    bucketX = Math.min(bucketX, window.innerWidth - bucketWidth / 2);
+    positionBucket();
+  });
+</script>
+
+</body>
+</html>
