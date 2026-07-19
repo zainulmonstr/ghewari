@@ -3,188 +3,408 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ghewari Game</title>
+    <title>Ghewari Universe</title>
     <style>
-        /* Modern UI & Reset */
+        /* Base Styles & Reset */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: manipulation; /* Mobile pe double-tap zoom rokne ke liye */
+            font-family: 'Segoe UI', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
         }
 
         body {
-            background: linear-gradient(135deg, #1e1e2f, #2a2a4a);
+            background: radial-gradient(circle at center, #2b2b45, #11111c);
             color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            height: 100vh;
-            width: 100vw;
             overflow: hidden;
-            padding: 20px 10px;
+            width: 100vw;
+            height: 100vh;
         }
 
-        /* Made by Zainul Header */
-        header {
-            font-size: clamp(1.2rem, 3vw, 2rem);
-            font-weight: 700;
-            color: #00d2ff;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
-            margin-top: 2vh;
-        }
-
-        /* Bada Score Display */
-        #scoreBoard {
-            font-size: clamp(3rem, 10vw, 6rem);
-            font-weight: 900;
-            color: #ffcc00;
-            text-shadow: 4px 4px 0px #ff3366, 0 0 20px rgba(255, 204, 0, 0.6);
-            margin: 2vh 0;
-            z-index: 10;
-        }
-
-        /* Image Container & Animation */
-        .game-area {
-            flex-grow: 1;
-            display: flex;
+        /* Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
-        #gameImage {
-            width: clamp(150px, 40vmin, 400px); /* Screen ke hisaab se auto adjust */
-            height: auto;
-            border-radius: 50%;
+        .active {
+            display: flex;
+        }
+
+        /* Header */
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            color: #00ffcc;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px rgba(0, 255, 204, 0.6);
+            position: absolute;
+            top: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* Home Screen Big Image */
+        #mainGhewari {
+            width: clamp(200px, 50vmin, 400px);
             cursor: pointer;
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
-            transition: transform 0.1s ease-out;
-            user-select: none;
-            -webkit-user-drag: none;
+            transition: transform 0.1s;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.2));
+            margin-bottom: 40px;
         }
 
-        /* Game start hone pe ghumne ka animation */
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        #mainGhewari:active {
+            transform: scale(0.9);
         }
 
-        .spin-anim {
-            animation: spin 5s linear infinite; /* Shuru me 5 second me ek chakkkar (Dhire) */
+        /* Buttons */
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
         }
 
-        /* Click karne par bounce effect */
-        .click-pop {
-            transform: scale(0.9) !important;
-        }
-
-        /* Start Button */
-        #startBtn {
-            background: linear-gradient(90deg, #ff3366, #ff9933);
+        button {
+            background: linear-gradient(90deg, #ff007f, #ff7f00);
             border: none;
             color: white;
-            font-size: clamp(1.2rem, 4vw, 2rem);
+            font-size: clamp(1rem, 3vw, 1.5rem);
             font-weight: bold;
-            padding: 15px 40px;
-            border-radius: 50px;
+            padding: 15px 30px;
+            border-radius: 30px;
             cursor: pointer;
-            box-shadow: 0 10px 20px rgba(255, 51, 102, 0.4);
-            transition: all 0.3s ease;
-            margin-bottom: 3vh;
+            box-shadow: 0 5px 15px rgba(255, 0, 127, 0.4);
+            transition: transform 0.2s;
             text-transform: uppercase;
         }
 
-        #startBtn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 25px rgba(255, 51, 102, 0.6);
+        button:active {
+            transform: scale(0.95);
         }
 
-        #startBtn:active {
-            transform: translateY(2px);
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background: #444;
+            box-shadow: none;
+        }
+
+        /* Common Score Board */
+        .score-board {
+            position: absolute;
+            top: 80px;
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 2px 2px 0px #ff0000;
+            z-index: 10;
+        }
+
+        /* Game 1: Collect Mechanics */
+        #game1Area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .falling-ghewari {
+            position: absolute;
+            width: clamp(40px, 10vmin, 80px);
+            cursor: pointer;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            from { top: -100px; transform: rotate(0deg); }
+            to { top: 110vh; transform: rotate(360deg); }
+        }
+
+        /* Game 2: Flappy Canvas */
+        canvas {
+            background: #70c5ce;
+            border: 4px solid #fff;
+            border-radius: 10px;
+            max-width: 100%;
+            max-height: 80vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <header>Made by Zainul</header>
+    <!-- Audio for Home Screen Image -->
+    <audio id="mainSound" src="ghewari.mp3" preload="auto"></audio>
 
-    <!-- Score -->
-    <div id="scoreBoard">0</div>
-
-    <!-- Main Game Image -->
-    <div class="game-area">
-        <img src="ghewari.png" id="gameImage" alt="Ghewari">
+    <!-- ================= HOME SCREEN ================= -->
+    <div id="homeScreen" class="screen active">
+        <h1>Made by Zainul</h1>
+        
+        <img src="ghewari.png" id="mainGhewari" alt="Main Ghewari">
+        
+        <div class="btn-container">
+            <button onclick="startGame1()">Play Collect Ghewari</button>
+            <button onclick="startGame2()">Play Flappy Ghewari</button>
+        </div>
     </div>
 
-    <!-- Start Button -->
-    <button id="startBtn">Start Game</button>
+    <!-- ================= GAME 1: COLLECT GHEWARI ================= -->
+    <div id="game1Screen" class="screen">
+        <button class="back-btn" onclick="showHome()">⬅ Back</button>
+        <div class="score-board" id="score1">0</div>
+        <div id="game1Area"></div>
+    </div>
 
-    <!-- Audio File -->
-    <audio id="tapSound" src="ghewari.mp3" preload="auto"></audio>
+    <!-- ================= GAME 2: FLAPPY GHEWARI ================= -->
+    <div id="game2Screen" class="screen">
+        <button class="back-btn" onclick="showHome()">⬅ Back</button>
+        <div class="score-board" id="score2">0</div>
+        <canvas id="flappyCanvas" width="320" height="480"></canvas>
+    </div>
 
     <script>
-        const gameImage = document.getElementById('gameImage');
-        const scoreBoard = document.getElementById('scoreBoard');
-        const startBtn = document.getElementById('startBtn');
-        const tapSound = document.getElementById('tapSound');
+        // --- Global Variables ---
+        const homeScreen = document.getElementById('homeScreen');
+        const game1Screen = document.getElementById('game1Screen');
+        const game2Screen = document.getElementById('game2Screen');
+        const mainSound = document.getElementById('mainSound');
+        const mainGhewari = document.getElementById('mainGhewari');
+        
+        // Image Object for Games
+        const ghewariImg = new Image();
+        ghewariImg.src = 'ghewari.png';
 
-        let score = 0;
-        let isPlaying = false;
-        let currentSpinDuration = 5; // Shuru me dhire ghumega (5 seconds)
-
-        // Game Start Logic
-        startBtn.addEventListener('click', () => {
-            score = 0;
-            scoreBoard.innerText = score;
-            isPlaying = true;
-            currentSpinDuration = 5;
+        // --- Home Screen Logic ---
+        mainGhewari.addEventListener('click', () => {
+            mainSound.currentTime = 0;
+            mainSound.play().catch(e => console.log("Audio play error", e));
             
-            // Image ghumna shuru
-            gameImage.classList.add('spin-anim');
-            gameImage.style.animationDuration = currentSpinDuration + 's';
-            
-            // Button ka text change
-            startBtn.innerText = "Restart Game";
-            
-            // Optional: Button ko thoda light ya chota kar sakte hain taaki focus game pe rahe
-            startBtn.style.opacity = "0.7";
+            // Chota sa bounce effect
+            mainGhewari.style.transform = "scale(0.8)";
+            setTimeout(() => { mainGhewari.style.transform = "scale(1)"; }, 150);
         });
 
-        // Image Click (Tap) Logic
-        gameImage.addEventListener('mousedown', handleTap);
-        gameImage.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Mobile pe extra zoom/scroll rokne ke liye
-            handleTap();
-        });
+        function showHome() {
+            homeScreen.classList.add('active');
+            game1Screen.classList.remove('active');
+            game2Screen.classList.remove('active');
+            stopGame1();
+            stopGame2();
+        }
 
-        function handleTap() {
-            if (!isPlaying) return; // Agar game start nahi hua to kuch mat karo
+        // --- GAME 1: COLLECT GHEWARI LOGIC ---
+        let score1 = 0;
+        let game1Interval;
+        const game1Area = document.getElementById('game1Area');
+        const score1Display = document.getElementById('score1');
 
-            // 1. Score badhao
-            score++;
-            scoreBoard.innerText = score;
+        function startGame1() {
+            homeScreen.classList.remove('active');
+            game1Screen.classList.add('active');
+            score1 = 0;
+            score1Display.innerText = score1;
+            game1Area.innerHTML = ''; // Clear old items
+            
+            // Har 800ms me ek naya ghewari girega
+            game1Interval = setInterval(spawnGhewari, 800);
+        }
 
-            // 2. Sound bajao (ghewari.mp3)
-            tapSound.currentTime = 0; // Taki jaldi jaldi tap karne pe sound repeat ho sake
-            tapSound.play().catch(e => console.log("Sound play error (browser policy):", e));
+        function stopGame1() {
+            clearInterval(game1Interval);
+            game1Area.innerHTML = '';
+        }
 
-            // 3. Speed Tez Karo (Animation duration kam karke)
-            if (currentSpinDuration > 0.3) { 
-                currentSpinDuration -= 0.15; // Har tap pe thoda tez hoga
-                gameImage.style.animationDuration = currentSpinDuration + 's';
+        function spawnGhewari() {
+            const img = document.createElement('img');
+            img.src = 'ghewari.png';
+            img.className = 'falling-ghewari';
+            
+            // Random horizontal position
+            img.style.left = Math.random() * 80 + 10 + 'vw'; 
+            
+            // Random speed (girene ki speed)
+            const duration = Math.random() * 2 + 2; 
+            img.style.animationDuration = duration + 's';
+
+            img.addEventListener('touchstart', collectItem);
+            img.addEventListener('mousedown', collectItem);
+
+            function collectItem(e) {
+                e.preventDefault();
+                score1++;
+                score1Display.innerText = score1;
+                img.remove(); // Collect hone par image gayab
+                playBeep(); // Game ke andar chota beep
             }
 
-            // 4. Click Pop Effect (Maza aane ke liye)
-            gameImage.classList.add('click-pop');
+            game1Area.appendChild(img);
+
+            // Screen ke bahar jane par delete kar do (Memory bachane ke liye)
             setTimeout(() => {
-                gameImage.classList.remove('click-pop');
-            }, 100); // 100ms ke baad bounce back hoga
+                if(img.parentElement) img.remove();
+            }, duration * 1000);
+        }
+
+        // --- GAME 2: FLAPPY GHEWARI LOGIC ---
+        const canvas = document.getElementById('flappyCanvas');
+        const ctx = canvas.getContext('2d');
+        const score2Display = document.getElementById('score2');
+        
+        let score2 = 0;
+        let frames = 0;
+        let game2Req;
+        let isGameOver = false;
+
+        const bird = {
+            x: 50, y: 150, w: 34, h: 34,
+            gravity: 0.25, velocity: 0, jump: -4.6,
+            draw: function() {
+                ctx.drawImage(ghewariImg, this.x, this.y, this.w, this.h);
+            },
+            update: function() {
+                this.velocity += this.gravity;
+                this.y += this.velocity;
+                if (this.y + this.h >= canvas.height || this.y <= 0) {
+                    isGameOver = true;
+                }
+            },
+            flap: function() {
+                this.velocity = this.jump;
+                playBeep();
+            }
+        };
+
+        const pipes = {
+            position: [], w: 50, gap: 120, dx: 2,
+            draw: function() {
+                for (let i = 0; i < this.position.length; i++) {
+                    let p = this.position[i];
+                    let topY = p.y;
+                    let bottomY = p.y + this.gap;
+                    
+                    ctx.fillStyle = "#228B22"; // Pipe color
+                    // Top pipe
+                    ctx.fillRect(p.x, 0, this.w, topY);
+                    // Bottom pipe
+                    ctx.fillRect(p.x, bottomY, this.w, canvas.height - bottomY);
+                }
+            },
+            update: function() {
+                if (frames % 100 == 0) {
+                    this.position.push({
+                        x: canvas.width,
+                        y: Math.random() * (canvas.height - this.gap - 40) + 20
+                    });
+                }
+                for (let i = 0; i < this.position.length; i++) {
+                    let p = this.position[i];
+                    p.x -= this.dx;
+
+                    // Collision detection
+                    if (bird.x + bird.w > p.x && bird.x < p.x + this.w && 
+                        (bird.y < p.y || bird.y + bird.h > p.y + this.gap)) {
+                        isGameOver = true;
+                    }
+
+                    // Score Update
+                    if (p.x + this.w === bird.x) {
+                        score2++;
+                        score2Display.innerText = score2;
+                    }
+
+                    // Remove old pipes
+                    if (p.x + this.w <= 0) {
+                        this.position.shift();
+                    }
+                }
+            },
+            reset: function() {
+                this.position = [];
+            }
+        };
+
+        function startGame2() {
+            homeScreen.classList.remove('active');
+            game2Screen.classList.add('active');
+            resetFlappy();
+            loop();
+        }
+
+        function stopGame2() {
+            cancelAnimationFrame(game2Req);
+        }
+
+        function resetFlappy() {
+            bird.y = 150;
+            bird.velocity = 0;
+            pipes.reset();
+            score2 = 0;
+            score2Display.innerText = score2;
+            frames = 0;
+            isGameOver = false;
+        }
+
+        function loop() {
+            if(isGameOver) {
+                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                ctx.fillRect(0,0,canvas.width, canvas.height);
+                ctx.fillStyle = "white";
+                ctx.font = "30px Arial";
+                ctx.fillText("Game Over", 80, 240);
+                ctx.font = "20px Arial";
+                ctx.fillText("Tap to Restart", 95, 280);
+                return;
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            bird.draw();
+            bird.update();
+            pipes.draw();
+            pipes.update();
+            frames++;
+            game2Req = requestAnimationFrame(loop);
+        }
+
+        // Flappy Controls
+        canvas.addEventListener('mousedown', flapControl);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); flapControl(); });
+
+        function flapControl() {
+            if(isGameOver) {
+                resetFlappy();
+                loop();
+            } else {
+                bird.flap();
+            }
+        }
+
+        // --- Simple Generated Beep Sound for In-Game (Taaki extra file na lagani pade) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
         }
     </script>
 </body>
