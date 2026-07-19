@@ -5,51 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ghewari | Elite Game</title>
     <style>
-        :root { --bg-color: #0f172a; --accent: #6366f1; }
-        * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; 
-            background-color: var(--bg-color); color: white;
-            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        /* पूरी स्क्रीन को लॉक कर दिया है ताकि स्क्रॉल न हो */
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background-color: #0f172a; color: white;
+            font-family: 'Segoe UI', sans-serif;
         }
 
         #viewport {
             width: 100vw; height: 100vh;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             position: relative;
         }
 
         /* --- HOME SCREEN --- */
-        #home-screen { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px; }
+        #home-screen { 
+            display: flex; flex-direction: column; 
+            align-items: center; justify-content: center;
+            width: 100%; height: 100%; padding: 10px;
+        }
         
-        .brand { font-size: 2.5rem; font-weight: 900; margin-bottom: 20px; color: var(--accent); text-transform: uppercase; }
+        .brand { font-size: 2rem; font-weight: 900; margin-bottom: 10px; color: #6366f1; }
         
-        /* इमेज को बड़ी और साफ़ रखा है */
+        /* इमेज को स्क्रीन के हिसाब से एडजस्ट किया है */
         .big-hero-img { 
-            width: 80vw; max-width: 450px; 
-            border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
-            border: 5px solid rgba(255,255,255,0.1); margin-bottom: 30px;
+            max-width: 90%; max-height: 55vh; 
+            border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            margin-bottom: 20px; object-fit: contain;
         }
 
         .btn { 
-            background: linear-gradient(135deg, var(--accent), #ec4899);
-            color: white; border: none; padding: 18px 50px; border-radius: 50px;
-            font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: 0.3s;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer;
         }
 
         /* --- GAME SCREEN --- */
         #game-screen { display: none; width: 100%; height: 100%; position: relative; }
-        #game-area { position: relative; width: 100%; height: 100%; overflow: hidden; background: rgba(0,0,0,0.3); }
         
-        .falling-item { position: absolute; width: 12%; max-width: 60px; pointer-events: none; }
+        #game-area { 
+            position: relative; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.3); touch-action: none;
+        }
+        
+        .falling-item { 
+            position: absolute; width: 50px; height: 50px; 
+            pointer-events: none; 
+        }
+        
         #basket { 
-            position: absolute; bottom: 30px; width: 25%; max-width: 120px;
-            height: 20px; background: #fff; border-radius: 10px;
-            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+            position: absolute; bottom: 20px; width: 100px; height: 20px; 
+            background: #fff; border-radius: 10px; box-shadow: 0 0 20px #fff;
         }
 
-        #score-display { position: absolute; top: 20px; right: 20px; font-size: 3rem; font-weight: 900; z-index: 10; }
+        #score-display { 
+            position: absolute; top: 10px; right: 20px; font-size: 2rem; font-weight: 900; z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -99,17 +111,18 @@
             const item = document.createElement('img');
             item.src = 'ghewari.png';
             item.className = 'falling-item';
-            item.style.left = (Math.random() * 80) + '%';
-            item.style.top = '-10%';
+            // रैंडम पोजीशन, स्क्रीन की चौड़ाई के अंदर
+            item.style.left = (Math.random() * (window.innerWidth - 50)) + 'px';
+            item.style.top = '-60px';
             document.getElementById('game-area').appendChild(item);
 
             let posY = 0;
             const animate = () => {
                 if(!this.isRunning) { item.remove(); return; }
                 posY += this.speed;
-                item.style.top = (posY / window.innerHeight * 100) + 'vh';
+                item.style.top = posY + 'px';
 
-                // COLLISION LOGIC (Precise)
+                // COLLISION LOGIC
                 const itemRect = item.getBoundingClientRect();
                 const basketRect = document.getElementById('basket').getBoundingClientRect();
 
@@ -144,9 +157,10 @@
     function move(e) {
         const rect = gameArea.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        let pos = ((clientX - rect.left) / rect.width) * 100;
-        pos = Math.max(10, Math.min(90, pos));
-        basket.style.left = pos + "%";
+        // बास्केट को बाउंड्री के अंदर रखें
+        let pos = clientX - (basket.offsetWidth / 2);
+        pos = Math.max(0, Math.min(window.innerWidth - basket.offsetWidth, pos));
+        basket.style.left = pos + "px";
     }
 
     gameArea.addEventListener('mousemove', move);
