@@ -3,161 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghewari Special Game</title>
+    <title>Ghewari | Professional Game</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background-color: #f0f0f0; margin: 0; padding: 20px; }
+        :root { --primary: #6366f1; --secondary: #ec4899; --bg: #0f172a; }
+        body { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; touch-action: none; }
+        .app-container { width: 100%; max-width: 500px; padding: 20px; text-align: center; }
         
-        /* स्क्रीन के दो हिस्से */
-        #image-screen { display: block; }
-        #game-screen { display: none; }
-
-        .brand-credit { font-size: 35px; font-weight: 900; color: #ff4b2b; margin-bottom: 20px; }
+        .brand { font-size: clamp(2rem, 8vw, 3rem); font-weight: 800; background: linear-gradient(to right, #6366f1, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
         
-        /* बड़ी इमेज */
-        .big-image { width: 90%; max-width: 400px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); margin-bottom: 30px; }
+        .big-image { width: 100%; max-width: 250px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 4px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
 
-        /* बटन */
-        .btn { background-color: #2196f3; color: white; padding: 15px 40px; border: none; border-radius: 30px; font-size: 20px; cursor: pointer; }
+        #game-ui { display: none; width: 100%; height: 80vh; position: relative; }
+        #game-area { position: relative; width: 100%; height: 100%; background: rgba(255,255,255,0.05); border-radius: 20px; border: 2px solid rgba(255,255,255,0.1); overflow: hidden; }
 
-        /* गेम एरिया */
-        #game-area { width: 100%; max-width: 400px; height: 400px; background-color: white; position: relative; overflow: hidden; border: 4px solid #333; margin: 0 auto; touch-action: none; }
-        .falling-item { width: 50px; height: 50px; position: absolute; top: -50px; }
-        #basket { width: 100px; height: 20px; background-color: #ff4757; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); border-radius: 5px; }
-        #score-board { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .falling-item { width: 50px; height: 50px; position: absolute; }
+        #basket { width: 100px; height: 25px; background: white; position: absolute; bottom: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.5); transition: left 0.1s ease-out; }
+
+        #score-board { font-size: 3rem; font-weight: 900; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-size: 1.2rem; cursor: pointer; transition: transform 0.2s; }
+        .btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
-<!-- इमेज और स्टार्ट बटन वाली स्क्रीन -->
-<div id="image-screen">
-    <div class="brand-credit">Made by Zainul</div>
+<div class="app-container" id="home-screen">
+    <div class="brand">Made by Zainul</div>
     <img src="ghewari.png" alt="Ghewari" class="big-image">
-    <br>
-    <button class="btn" onclick="startCountdown()">गेम स्टार्ट करें 🎮</button>
+    <button class="btn" onclick="startGame()">Start Game 🚀</button>
 </div>
 
-<!-- गेम खेलने वाली स्क्रीन -->
-<div id="game-screen">
-    <div id="score-board">स्कोर: <span id="score">0</span></div>
+<div class="app-container" id="game-ui">
+    <div id="score-board">0</div>
     <div id="game-area">
         <div id="basket"></div>
-        <div id="countdown" style="position: absolute; top: 40%; width: 100%; font-size: 50px; font-weight: bold;"></div>
     </div>
 </div>
 
 <script>
-    const imageScreen = document.getElementById('image-screen');
-    const gameScreen = document.getElementById('game-screen');
+    // Audio Context (Sound Engine)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'catch') {
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        }
+        osc.start();
+        osc.stop(audioCtx.currentTime + (type === 'catch' ? 0.1 : 0.5));
+    }
+
+    const homeScreen = document.getElementById('home-screen');
+    const gameUI = document.getElementById('game-ui');
     const gameArea = document.getElementById('game-area');
     const basket = document.getElementById('basket');
-    const scoreDisplay = document.getElementById('score');
-    const countdownEl = document.getElementById('countdown');
-
+    const scoreEl = document.getElementById('score-board');
+    
     let score = 0;
-    let isPlaying = false;
-    let basketX = 200;
-    let fallingSpeed = 5;
+    let isRunning = false;
+    let speed = 4;
 
-    // गेम शुरू करने का फंक्शन
-    function startCountdown() {
-        imageScreen.style.display = 'none';
-        gameScreen.style.display = 'block';
-        countdownEl.style.display = 'block';
-        
-        let count = 3;
-        countdownEl.innerText = count;
-        
-        let timer = setInterval(() => {
-            count--;
-            if (count > 0) countdownEl.innerText = count;
-            else if (count === 0) countdownEl.innerText = "GO!";
-            else { 
-                clearInterval(timer); 
-                countdownEl.style.display = 'none'; 
-                initGame(); 
-            }
-        }, 1000);
-    }
-
-    function initGame() {
-        isPlaying = true;
+    function startGame() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        homeScreen.style.display = 'none';
+        gameUI.style.display = 'block';
         score = 0;
-        fallingSpeed = 5;
-        scoreDisplay.innerText = score;
-        setInterval(createFallingItem, 1000);
+        speed = 4;
+        scoreEl.innerText = score;
+        isRunning = true;
+        spawnItems();
     }
 
-    // स्मूथ ड्रैग मूवमेंट
-    gameArea.addEventListener('mousemove', (e) => {
-        if(!isPlaying) return;
-        const rect = gameArea.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        updateBasket(x);
-    });
-
-    gameArea.addEventListener('touchmove', (e) => {
-        if(!isPlaying) return;
-        const rect = gameArea.getBoundingClientRect();
-        let x = e.touches[0].clientX - rect.left;
-        updateBasket(x);
-    });
-
-    function updateBasket(x) {
-        const half = 50; // बास्केट की आधी चौड़ाई
-        if(x < half) x = half;
-        if(x > gameArea.offsetWidth - half) x = gameArea.offsetWidth - half;
-        basketX = x;
-        basket.style.left = (basketX - 50) + 'px';
+    function moveBasket(e) {
+        const areaRect = gameArea.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let relativeX = ((clientX - areaRect.left) / areaRect.width) * 100;
+        relativeX = Math.max(10, Math.min(90, relativeX));
+        basket.style.left = relativeX + "%";
     }
 
-    function createFallingItem() {
-        if (!isPlaying) return;
-        const img = document.createElement('img');
-        img.src = 'ghewari.png';
-        img.classList.add('falling-item');
-        
-        const maxX = gameArea.offsetWidth - 50;
-        let startX = Math.floor(Math.random() * maxX);
-        img.style.left = startX + 'px';
-        gameArea.appendChild(img);
+    gameArea.addEventListener('mousemove', moveBasket);
+    gameArea.addEventListener('touchmove', moveBasket);
 
-        let posY = -50;
-        
-        function fall() {
-            if (!isPlaying) { img.remove(); return; }
-            posY += fallingSpeed;
-            img.style.top = posY + 'px';
+    function spawnItems() {
+        if (!isRunning) return;
+        const item = document.createElement('img');
+        item.src = 'ghewari.png';
+        item.className = 'falling-item';
+        item.style.left = Math.random() * 85 + "%";
+        item.style.top = "-50px";
+        gameArea.appendChild(item);
 
-            // कोलाइडर (Collision Logic) - एकदम सटीक
-            // बास्केट की पोजीशन: bottom 10px, height 20px
-            // मतलब बास्केट 370px से 390px के बीच है
-            if (posY >= 330 && posY <= 380) {
-                let imgLeft = parseInt(img.style.left);
-                let imgRight = imgLeft + 50;
-                let basketLeft = basketX - 50;
-                let basketRight = basketX + 50;
+        let top = 0;
+        function drop() {
+            if (!isRunning) { item.remove(); return; }
+            top += speed;
+            item.style.top = top + "px";
 
-                // अगर इमेज का हिस्सा बास्केट के अंदर है
-                if (imgRight > basketLeft && imgLeft < basketRight) {
-                    score++;
-                    scoreDisplay.innerText = score;
-                    if(score % 2 === 0) fallingSpeed += 0.2; // धीरे-धीरे स्पीड बढ़ाएं
-                    img.remove();
-                    return;
-                }
+            const itemRect = item.getBoundingClientRect();
+            const basketRect = basket.getBoundingClientRect();
+
+            // Precise Collision
+            if (itemRect.bottom >= basketRect.top && 
+                itemRect.right >= basketRect.left && 
+                itemRect.left <= basketRect.right) {
+                
+                playSound('catch'); // कैच साउंड
+                score++;
+                scoreEl.innerText = score;
+                speed += 0.2;
+                item.remove();
+                return;
             }
 
-            if (posY > 400) { 
-                img.remove(); 
-                alert("गेम ओवर! स्कोर: " + score);
-                location.reload(); // पेज रीसेट करें
+            if (top > gameArea.offsetHeight) {
+                item.remove();
+                endGame();
             } else {
-                requestAnimationFrame(fall);
+                requestAnimationFrame(drop);
             }
         }
-        fall();
+        drop();
+        setTimeout(spawnItems, Math.max(400, 1200 - (score * 40)));
+    }
+
+    function endGame() {
+        isRunning = false;
+        playSound('over'); // गेम ओवर साउंड
+        alert("Game Over! Final Score: " + score);
+        location.reload();
     }
 </script>
-
 </body>
 </html>
