@@ -8,63 +8,69 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
-            background-color: #1a1a2e; /* थोड़ा डार्क और मॉडर्न बैकग्राउंड */
-            color: #fff;
+            background-color: #f4f7f6; /* पहले जैसा साफ वाइट/लाइट बैकग्राउंड */
+            color: #333;
             margin: 0;
             padding: 20px;
         }
         .container {
             max-width: 600px;
             margin: 0 auto;
-            background: #162447;
+            background: white;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
         }
         
-        /* जैनुल भाई की ब्रांडिंग - बड़े और एक्शन एनीमेशन के साथ */
+        /* जैनुल भाई की ब्रांडिंग - वाइट थीम के लिए शानदार ग्रेडिएंट एनीमेशन */
         .brand-credit {
-            font-size: 38px;
+            font-size: 40px;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-bottom: 20px;
-            color: #00fff5;
-            text-shadow: 0 0 10px #00fff5, 0 0 20px #00fff5;
-            animation: pulseGlow 2s infinite alternate;
+            background: linear-gradient(45deg, #ff416c, #ff4b2b, #00b4db, #0083b0);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientMove 4s ease infinite, pulseScale 2s infinite alternate;
         }
 
-        @keyframes pulseGlow {
-            0% {
-                transform: scale(1);
-                text-shadow: 0 0 10px #00fff5, 0 0 20px #00fff5;
-            }
-            100% {
-                transform: scale(1.05);
-                text-shadow: 0 0 20px #00fff5, 0 0 40px #00fff5, 0 0 60px #00fff5;
-            }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes pulseScale {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.04); }
         }
 
         .main-image {
             max-width: 100%;
             height: auto;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             margin-bottom: 20px;
-            border: 2px solid #00fff5;
+            border: 3px solid #eee;
         }
 
         #game-area {
             width: 100%;
             height: 400px;
-            background-color: #1f4068;
+            background-color: #e3f2fd; /* लाइट ब्लू गेमिंग एरिया */
             position: relative;
             overflow: hidden;
-            border: 3px solid #00fff5;
+            border: 3px solid #2196f3;
             border-radius: 10px;
-            cursor: crosshair;
+            cursor: grab;
             display: none; 
             margin: 20px auto 0 auto;
+            touch-action: none; /* मोबाइल पर स्क्रीन को स्क्रॉल होने से रोकेगा */
+        }
+        #game-area:active {
+            cursor: grabbing;
         }
         .falling-item {
             width: 50px;
@@ -72,46 +78,48 @@
             position: absolute;
             top: -50px;
             user-select: none;
+            pointer-events: none;
         }
         #basket {
             width: 90px;
-            height: 20px;
-            background-color: #e94560;
+            height: 22px;
+            background-color: #ff4757; /* प्यारा लाल रंग का बास्केट */
             position: absolute;
-            bottom: 10px;
+            bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
             border-radius: 5px;
-            box-shadow: 0 0 15px #e94560;
+            box-shadow: 0 4px 8px rgba(255, 71, 87, 0.4);
+            pointer-events: none; /* बास्केट के आर-पार ड्रैग करने में मदद करेगा */
         }
         #score-board {
             font-size: 24px;
             font-weight: bold;
-            color: #00fff5;
+            color: #2196f3;
             margin: 15px 0;
         }
         .btn {
-            background-color: #00fff5;
-            color: #1a1a2e;
+            background-color: #2196f3;
+            color: white;
             padding: 12px 30px;
             border: none;
             border-radius: 25px;
             font-size: 20px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 255, 245, 0.4);
+            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
             transition: 0.2s;
         }
         .btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 5px 25px rgba(0, 255, 245, 0.8);
+            background-color: #1e88e5;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- यह वेबसाइट खुलते ही सबसे ऊपर बड़े और शानदार एनीमेशन में दिखेगा -->
+    <!-- यह सबसे ऊपर बड़े और एक्शन ग्रेडिएंट लुक में चमकेगा -->
     <div class="brand-credit">Made by Zainul</div>
 
     <img src="ghewari.png" alt="Ghewari Image" class="main-image">
@@ -133,9 +141,14 @@
     let score = 0;
     let gameInterval;
     let isPlaying = false;
-    let basketX = 300;
+    
+    // स्लाइडर (बास्केट) की पोजीशन ट्रैक करने के लिए वेरिएबल्स
+    let basketX = 150; 
+    let isDragging = false;
+    let startX = 0;
+    let startBasketX = 0;
 
-    // साउंड इफेक्ट्स जनरेट करने के लिए कोड (No external files needed!)
+    // साउंड इफेक्ट्स (No external files needed)
     let audioCtx = null;
 
     function initAudio() {
@@ -150,16 +163,13 @@
         let gain = audioCtx.createGain();
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
-        
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
-        
+        osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.08);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.1);
+        osc.stop(audioCtx.currentTime + 0.08);
     }
 
     function playGameOverSound() {
@@ -168,38 +178,77 @@
         let gain = audioCtx.createGain();
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-        osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.4);
-        
-        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
-        
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(60, audioCtx.currentTime + 0.35);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.35);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.4);
+        osc.stop(audioCtx.currentTime + 0.35);
     }
 
-    // माउस और टच मूवमेंट
-    gameArea.addEventListener('mousemove', (e) => {
+    // --- स्मूथ स्लाइडर/ड्रैग कंट्रोल लॉजिक ---
+
+    // माउस ड्रैग शुरू होना
+    gameArea.addEventListener('mousedown', (e) => {
         if (!isPlaying) return;
-        const rect = gameArea.getBoundingClientRect();
-        let relX = e.clientX - rect.left;
-        if (relX < 45) relX = 45;
-        if (relX > gameArea.offsetWidth - 45) relX = gameArea.offsetWidth - 45;
-        basketX = relX;
-        basket.style.left = (basketX - 45) + 'px';
+        isDragging = true;
+        startX = e.clientX;
+        startBasketX = basketX;
     });
 
+    // माउस से स्लाइड करना
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging || !isPlaying) return;
+        const deltaX = e.clientX - startX;
+        moveBasketSmoothly(startBasketX + deltaX);
+    });
+
+    // माउस छोड़ना
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // मोबाइल टच ड्रैग शुरू होना
+    gameArea.addEventListener('touchstart', (e) => {
+        if (!isPlaying) return;
+        isDragging = true;
+        startX = e.touches[0].clientX;
+        startBasketX = basketX;
+    });
+
+    // मोबाइल पर उंगली से स्लाइड करना
+    window.addEventListener('touchmove', (e) => {
+        if (!isDragging || !isPlaying) return;
+        const deltaX = e.touches[0].clientX - startX;
+        moveBasketSmoothly(startBasketX + deltaX);
+    });
+
+    // मोबाइल टच छोड़ना
+    window.addEventListener('touchend', () => { isDragging = false; });
+
+    function moveBasketSmoothly(newX) {
+        const halfBasket = basket.offsetWidth / 2;
+        // बाउंड्री चेक (स्क्रीन से बाहर न जाए)
+        if (newX < halfBasket) newX = halfBasket;
+        if (newX > gameArea.offsetWidth - halfBasket) newX = gameArea.offsetWidth - halfBasket;
+        
+        basketX = newX;
+        basket.style.left = (basketX - halfBasket) + 'px';
+    }
+
     function startGame() {
-        initAudio(); // यूजर क्लिक पर ऑडियो एक्टिवेट करना
+        initAudio();
         if (isPlaying) return;
         isPlaying = true;
         score = 0;
         scoreDisplay.innerText = score;
         startBtn.style.display = 'none';
         gameArea.style.display = 'block';
-        gameInterval = setInterval(createFallingImage, 900); // थोड़ी स्पीड बढ़ाई ताकि मज़ा आए
+        
+        // शुरुआत में बास्केट को ठीक बीच में सेट करना
+        basketX = gameArea.offsetWidth / 2;
+        moveBasketSmoothly(basketX);
+
+        gameInterval = setInterval(createFallingImage, 950);
     }
 
     function createFallingImage() {
@@ -212,19 +261,20 @@
         gameArea.appendChild(img);
 
         let posY = -50;
-        let speed = 5 + Math.random() * 3;
+        let speed = 4.5 + Math.random() * 2.5;
 
         function fall() {
             if (!isPlaying) { img.remove(); return; }
             posY += speed;
             img.style.top = posY + 'px';
             
-            if (posY >= 350 && posY <= 380) {
+            if (posY >= 345 && posY <= 375) {
                 const imgLeft = parseInt(img.style.left);
-                if (imgLeft + 25 >= (basketX - 45) && imgLeft <= (basketX + 45)) {
+                const halfBasket = basket.offsetWidth / 2;
+                if (imgLeft + 25 >= (basketX - halfBasket) && imgLeft <= (basketX + halfBasket)) {
                     score++;
                     scoreDisplay.innerText = score;
-                    playCatchSound(); // कैच करने पर साउंड
+                    playCatchSound();
                     img.remove();
                     return;
                 }
@@ -241,8 +291,9 @@
 
     function gameOver() {
         isPlaying = false;
+        isDragging = false;
         clearInterval(gameInterval);
-        playGameOverSound(); // गेम ओवर होने पर साउंड
+        playGameOverSound();
         
         setTimeout(() => {
             alert('गेम ओवर! जैनुल भाई की तरफ से आपका फाइनल स्कोर: ' + score);
